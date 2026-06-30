@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import HowItWorksModal from "../components/HowItWorksModal"
 
 const stats = [
   { label: "DENSIDAD", value: "1.240", unit: "hab/km²" },
@@ -10,6 +12,7 @@ const steps = ["Ubicación", "Datos", "Análisis", "Resultados"]
 
 export default function Home() {
   const navigate = useNavigate()
+  const [showModal, setShowModal] = useState(false)
 
   return (
     <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)",
@@ -45,7 +48,7 @@ export default function Home() {
             border: "none", borderRadius: 10, padding: "14px 28px",
             fontSize: 15, fontWeight: 600, cursor: "pointer"
           }}>Comenzar análisis</button>
-          <button style={{
+          <button onClick={() => setShowModal(true)} style={{
             background: "transparent", color: "var(--color-text)",
             border: "1px solid var(--color-border)", borderRadius: 10,
             padding: "14px 28px", fontSize: 15, fontWeight: 600, cursor: "pointer"
@@ -97,7 +100,8 @@ export default function Home() {
             {[120, 80, 40].map((r, i) => (
               <div key={i} style={{
                 position: "absolute", width: r * 2, height: r * 2,
-                borderRadius: "50%", border: "1px dashed var(--color-border)"
+                borderRadius: "50%", border: "1px dashed var(--color-text-muted)",
+                opacity: 0.4
               }} />
             ))}
             <div style={{
@@ -128,6 +132,7 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {showModal && <HowItWorksModal onClose={() => setShowModal(false)} />}
     </div>
   )
 }

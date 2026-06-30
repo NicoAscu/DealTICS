@@ -1,10 +1,15 @@
 import { Link, useLocation } from "react-router-dom"
+import { useState, useEffect } from "react"
 
 export default function Navbar() {
   const { pathname } = useLocation()
+  const [dark, setDark] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark)
+  }, [dark])
 
   const links = [
-    { to: "/", label: "Inicio" },
     { to: "/analisis", label: "Análisis" },
     { to: "/comparador", label: "Comparador" },
     { to: "/reportes", label: "Reportes" },
@@ -46,7 +51,7 @@ export default function Navbar() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-        {links.slice(1).map(l => (
+        {links.map(l => (
           <Link key={l.to} to={l.to} style={{
             textDecoration: "none", fontSize: 14, fontWeight: 500,
             color: pathname === l.to ? "var(--color-text)" : "var(--color-text-muted)",
@@ -54,12 +59,19 @@ export default function Navbar() {
             paddingBottom: 2,
           }}>{l.label}</Link>
         ))}
+
+        <button onClick={() => setDark(d => !d)} title="Cambiar tema" style={{
+          width: 32, height: 32, borderRadius: 8, border: "1px solid var(--color-border)",
+          background: "var(--color-bg)", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14
+        }}>
+          {dark ? "☀️" : "🌙"}
+        </button>
+
         <div style={{
           width: 32, height: 32, borderRadius: "50%",
-          background: "var(--color-primary)", color: "white",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, fontWeight: 700, cursor: "pointer"
-        }}>CR</div>
+          background: "var(--color-primary)", cursor: "pointer"
+        }} />
       </div>
     </nav>
   )

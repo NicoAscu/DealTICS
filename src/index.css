@@ -4,6 +4,7 @@
   --color-bg: #f0f2f5;
   --color-surface: #ffffff;
   --color-primary: #1a2b4a;
+  --color-on-primary: #ffffff;
   --color-accent: #4a7fd4;
   --color-text: #1a2b4a;
   --color-text-muted: #6b7a99;
@@ -13,10 +14,11 @@
 .dark {
   --color-bg: #0d1117;
   --color-surface: #161c27;
-  --color-primary: #ffffff;
+  --color-primary: #4a7fd4;
+  --color-on-primary: #ffffff;
   --color-accent: #4a7fd4;
   --color-text: #ffffff;
-  --color-text-muted: #6b7a99;
+  --color-text-muted: #8b97ad;
   --color-border: #1e2738;
 }
 
