@@ -54,7 +54,7 @@ export default function Simulador() {
   }), [alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen])
 
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
+    <div className="page-enter" style={{ display: "flex", minHeight: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
 
       {/* Panel izquierdo — controles */}
       <div style={{ width: 380, background: "var(--color-surface)", margin: 16,

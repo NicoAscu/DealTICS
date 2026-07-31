@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../services/api"
+import RiskBadge from "../components/RiskBadge"
 
 const mockAnalisis = [
   { id: 1, neighborhood: "Palermo, CABA", business_name: "Cafetería", opportunity_index: 78,
@@ -10,12 +11,6 @@ const mockAnalisis = [
   { id: 3, neighborhood: "Flores, CABA", business_name: "Panadería", opportunity_index: 51,
     risk_level: "high", radius_m: 500, created_at: "2026-06-28" },
 ]
-
-const riskConfig = {
-  low: { label: "BAJO", color: "#22c55e" },
-  medium: { label: "MEDIO", color: "#f59e0b" },
-  high: { label: "ALTO", color: "#ef4444" },
-}
 
 export default function MisAnalisis() {
   const navigate = useNavigate()
@@ -33,7 +28,7 @@ export default function MisAnalisis() {
   }, [])
 
   return (
-    <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)", padding: 32 }}>
+    <div className="page-enter" style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)", padding: 32 }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
           alignItems: "center", marginBottom: 28 }}>
@@ -65,10 +60,11 @@ export default function MisAnalisis() {
               const risk = riskConfig[a.risk_level] || riskConfig.medium
               return (
                 <div key={a.id} onClick={() => navigate("/resultados")}
+                  className="card-hover"
                   style={{ background: "var(--color-surface)", borderRadius: 14,
                     border: "1px solid var(--color-border)", padding: "20px 24px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
-                    cursor: "pointer", transition: "border-color 0.2s" }}>
+                    cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                     <div style={{ width: 52, height: 52, borderRadius: 12,
                       background: "var(--color-bg)", display: "flex", flexDirection: "column",
@@ -88,10 +84,7 @@ export default function MisAnalisis() {
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px",
-                      borderRadius: 20, background: risk.color + "20", color: risk.color }}>
-                      {risk.label}
-                    </span>
+                    <RiskBadge level={a.risk_level} size="sm" />
                     <span style={{ color: "var(--color-text-muted)", fontSize: 18 }}>→</span>
                   </div>
                 </div>

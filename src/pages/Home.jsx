@@ -15,7 +15,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)",
+    <div className="page-enter" style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)",
       display: "flex", alignItems: "center", padding: "0 64px", gap: 64 }}>
 
       {/* Izquierda */}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import RiskBadge from "../components/RiskBadge"
 
 const indicadores = [
   { label: "Demanda potencial", key: "demand", default: 82 },
@@ -34,7 +35,7 @@ export default function Resultados() {
   const riskColor = { low: "#22c55e", medium: "#f59e0b", high: "#ef4444" }[risk]
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
+    <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
 
       {/* Mapa izquierda */}
       <div style={{ flex: 1, background: "var(--color-surface)", margin: 16,
@@ -104,8 +105,7 @@ export default function Resultados() {
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)" }}>
                   {score >= 70 ? "Oportunidad alta" : score >= 50 ? "Oportunidad media" : "Oportunidad baja"}
                 </h3>
-                <span style={{ fontSize: 11, fontWeight: 700, background: riskColor + "20",
-                  color: riskColor, padding: "3px 10px", borderRadius: 20 }}>● {riskLabel}</span>
+                <RiskBadge level={risk} size="md" />
               </div>
               <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 16 }}>
                 La zona muestra demanda sólida y competencia moderada para un negocio de ticket medio.
