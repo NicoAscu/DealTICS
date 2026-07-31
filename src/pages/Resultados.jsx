@@ -194,11 +194,19 @@ export default function Resultados() {
                 Basado en demanda, competencia y poder adquisitivo de la zona.
               </p>
             </div>
-            <button onClick={() => navigate("/comparador")} style={{
-              background: "var(--color-primary)", color: "white", border: "none",
-              borderRadius: 12, padding: "14px 24px", fontSize: 14,
-              fontWeight: 700, cursor: "pointer", flexShrink: 0
-            }}>Comparar escenarios</button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => navigate("/simulador")} style={{
+                background: "transparent", color: "var(--color-text)",
+                border: "1px solid var(--color-border)",
+                borderRadius: 12, padding: "14px 24px", fontSize: 14,
+                fontWeight: 700, cursor: "pointer", flexShrink: 0
+              }}>Simular costos</button>
+              <button onClick={() => navigate("/comparador")} style={{
+                background: "var(--color-primary)", color: "var(--color-on-primary)", border: "none",
+                borderRadius: 12, padding: "14px 24px", fontSize: 14,
+                fontWeight: 700, cursor: "pointer", flexShrink: 0
+              }}>Comparar escenarios</button>
+            </div>
           </div>
         </div>
       </div>

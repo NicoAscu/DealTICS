@@ -6,6 +6,11 @@ import Loading from "./pages/Loading"
 import Resultados from "./pages/Resultados"
 import Comparador from "./pages/Comparador"
 import Reportes from "./pages/Reportes"
+import Simulador from "./pages/Simulador"
+import Login from "./pages/Login"
+import Registro from "./pages/Registro"
+import Recuperar from "./pages/Recuperar"
+import MisAnalisis from "./pages/MisAnalisis"
 
 export default function App() {
   return (
@@ -18,6 +23,11 @@ export default function App() {
         <Route path="/resultados" element={<Resultados />} />
         <Route path="/comparador" element={<Comparador />} />
         <Route path="/reportes" element={<Reportes />} />
+        <Route path="/simulador" element={<Simulador />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/recuperar" element={<Recuperar />} />
+        <Route path="/mis-analisis" element={<MisAnalisis />} />
       </Routes>
     </BrowserRouter>
   )
