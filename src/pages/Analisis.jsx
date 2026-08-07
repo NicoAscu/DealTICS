@@ -54,11 +54,12 @@ export default function Analisis() {
   }
 
   const panelStyle = {
-    width: 380, background: "var(--color-surface)",
-    borderRadius: 16, padding: 28, margin: 20,
+    width: 380, minWidth: 320, background: "var(--color-surface)",
+    borderRadius: 16, padding: 28, margin: 16,
     border: "1px solid var(--color-border)",
     display: "flex", flexDirection: "column", gap: 20,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.06)"
+    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+    height: "calc(100vh - 88px)", overflowY: "auto", flexShrink: 0
   }
 
   const labelStyle = {
@@ -73,7 +74,7 @@ export default function Analisis() {
   }
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 56px)" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 56px)", overflow: "hidden", position: "relative" }}>
       {/* Panel izquierdo */}
       <div style={panelStyle}>
         <div>
@@ -162,7 +163,7 @@ export default function Analisis() {
       </div>
 
       {/* Mapa */}
-      <div style={{ flex: 1, position: "relative" }}>
+      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {position && (
           <div style={{
             position: "absolute", top: 16, left: 16, zIndex: 1000,
