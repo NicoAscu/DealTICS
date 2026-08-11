@@ -69,7 +69,8 @@ export default function Resultados() {
       {/* Panel derecha */}
       <div style={{ width: 560, minWidth: 400, overflowY: "auto", padding: "16px 16px 16px 0", height: "calc(100vh - 56px)" }}>
         <div style={{ background: "var(--color-surface)", borderRadius: 16,
-          border: "1px solid var(--color-border)", overflow: "hidden" }}>
+          border: "1px solid var(--color-border)", overflow: "hidden",
+          display: "flex", flexDirection: "column" }}>
 
           {/* Header */}
           <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--color-border)",
@@ -174,7 +175,7 @@ export default function Resultados() {
           </div>
 
           {/* Rubros recomendados */}
-          <div style={{ padding: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
                 Rubros recomendados
