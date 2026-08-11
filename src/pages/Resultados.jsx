@@ -35,7 +35,7 @@ export default function Resultados() {
   const riskColor = { low: "#22c55e", medium: "#f59e0b", high: "#ef4444" }[risk]
 
   return (
-    <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
+    <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)", overflow: "hidden" }}>
 
       {/* Mapa izquierda */}
       <div style={{ flex: 1, background: "var(--color-surface)", margin: 16,
@@ -67,7 +67,7 @@ export default function Resultados() {
       </div>
 
       {/* Panel derecha */}
-      <div style={{ width: 560, overflowY: "auto", padding: "16px 16px 16px 0" }}>
+      <div style={{ width: 560, minWidth: 400, overflowY: "auto", padding: "16px 16px 16px 0", height: "calc(100vh - 56px)" }}>
         <div style={{ background: "var(--color-surface)", borderRadius: 16,
           border: "1px solid var(--color-border)", overflow: "hidden" }}>
 
