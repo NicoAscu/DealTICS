@@ -18,7 +18,7 @@ export default function Registro() {
     setLoading(true)
     setError("")
     try {
-      const res = await api.post("/auth/register", { name: nombre, email, password })
+      const res = await api.post("/users/register", { name: nombre, email, password })
       localStorage.setItem("token", res.data.token)
       localStorage.setItem("user", JSON.stringify(res.data.user))
       navigate("/")

@@ -21,7 +21,9 @@ export default function MisAnalisis() {
     const token = localStorage.getItem("token")
     if (!token) { navigate("/login"); return }
 
-    api.get("/analyses/user/1")
+    const userData = localStorage.getItem("user")
+    const userId = userData ? JSON.parse(userData).id : 1
+    api.get(`/analyses/user/${userId}`)
       .then(r => setAnalisis(r.data))
       .catch(() => setAnalisis(mockAnalisis))
       .finally(() => setLoading(false))

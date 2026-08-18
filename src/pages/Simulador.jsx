@@ -1,5 +1,9 @@
 import { useState, useMemo } from "react"
 import SimuladorDashboard from "../components/SimuladorDashboard"
+import { useState, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
+import api from "../services/api"
+import SimuladorDashboard from "../components/SimuladorDashboard"
 
 function calcularMetricas({ alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen }) {
   const costosMensuales = alquiler + salarios + servicios
@@ -8,7 +12,37 @@ function calcularMetricas({ alquiler, salarios, servicios, inversionInicial, pre
   const puntoEquilibrioUnidades = gananciaUnidad > 0 ? Math.ceil(costosMensuales / gananciaUnidad) : 0
   const rentabilidadMensual = ingresosMensuales * (margen / 100) - costosMensuales
   const tiempoRecuperacionMeses = rentabilidadMensual > 0 ? Math.ceil(inversionInicial / rentabilidadMensual) : null
+  const handleGuardar = async () => {
+    const analysisId = JSON.parse(localStorage.getItem("analysisResult") || "{}")?.id || 1
 
+    try {
+      await api.post("/cost-estimations", {
+        analysis_id: analysisId,
+        renovation_cost: 0,
+        furniture_cost: 0,
+        equipment_cost: 0,
+        software_cost: 0,
+        marketing_initial: 0,
+        initial_stock: 0,
+        monthly_salaries: salarios,
+        monthly_services: servicios,
+        monthly_suppliers: 0,
+      })
+
+      await api.post("/scenarios", {
+        analysis_id: analysisId,
+        name: "Escenario principal",
+        monthly_revenue_est: metricas.ingresosMensuales,
+        avg_product_price: precioPromedio,
+        monthly_sales_vol: ventasMensuales,
+        profit_margin: margen,
+      })
+
+      alert("Escenario guardado correctamente.")
+    } catch (e) {
+      alert("No se pudo guardar. Verificá que hayas hecho un análisis primero.")
+    }
+  }
   return {
     costosMensuales,
     ingresosMensuales,
@@ -88,7 +122,12 @@ export default function Simulador() {
         <Slider label="Margen de ganancia" value={margen} onChange={setMargen}
           min={5} max={80} step={1} suffix="%" />
       </div>
-
+        <button onClick={handleGuardar} style={{
+          width: "100%", padding: "14px", borderRadius: 12, fontSize: 15,
+          fontWeight: 700, cursor: "pointer", border: "none",
+          background: "var(--color-primary)", color: "var(--color-on-primary)",
+          marginTop: 8
+        }}>Guardar escenario</button>
       {/* Panel derecho — dashboard */}
       <div style={{ flex: 1, padding: 16 }}>
         <SimuladorDashboard metricas={metricas} inversionInicial={inversionInicial} />

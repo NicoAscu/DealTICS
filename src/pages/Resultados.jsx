@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import RiskBadge from "../components/RiskBadge"
+import api from "../services/api"
 
 const indicadores = [
   { label: "Demanda potencial", key: "demand", default: 82 },
@@ -23,10 +24,19 @@ const competidores = [
 export default function Resultados() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
+  const [competidoresReales, setCompetidoresReales] = useState([])
 
   useEffect(() => {
     const saved = localStorage.getItem("analysisResult")
-    if (saved) setData(JSON.parse(saved))
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      setData(parsed)
+      if (parsed?.id) {
+        api.get(`/competitors/analysis/${parsed.id}`)
+          .then(r => setCompetidoresReales(r.data))
+          .catch(() => {})
+      }
+    }
   }, [])
 
   const score = data?.opportunity_index || 78
