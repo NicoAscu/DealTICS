@@ -19,11 +19,14 @@ export default function Registro() {
     setError("")
     try {
       const res = await api.post("/users/register", { name: nombre, email, password })
-      localStorage.setItem("token", res.data.token)
-      localStorage.setItem("user", JSON.stringify(res.data.user))
-      navigate("/")
+      // Registro exitoso, redirigir al login
+      navigate("/login")
     } catch (e) {
-      setError("No se pudo crear la cuenta. El email puede estar en uso.")
+      if (e.response?.status === 409) {
+        setError("El email ya está registrado.")
+      } else {
+        setError("No se pudo crear la cuenta. Intentá de nuevo.")
+      }
     } finally {
       setLoading(false)
     }

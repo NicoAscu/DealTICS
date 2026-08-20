@@ -18,12 +18,11 @@ export default function MisAnalisis() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) { navigate("/login"); return }
-
     const userData = localStorage.getItem("user")
-    const userId = userData ? JSON.parse(userData).id : 1
-    api.get(`/analyses/user/${userId}`)
+    if (!userData) { navigate("/login"); return }
+
+    const user = JSON.parse(userData)
+    api.get(`/analyses/user/${user.id}`)
       .then(r => setAnalisis(r.data))
       .catch(() => setAnalisis(mockAnalisis))
       .finally(() => setLoading(false))

@@ -18,7 +18,6 @@ export default function Navbar() {
   }, [pathname])
 
   const logout = () => {
-    localStorage.removeItem("token")
     localStorage.removeItem("user")
     setUser(null)
     navigate("/")

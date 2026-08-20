@@ -15,8 +15,7 @@ export default function Login() {
     setError("")
     try {
       const res = await api.post("/users/login", { email, password })
-      localStorage.setItem("token", res.data.token)
-      localStorage.setItem("user", JSON.stringify(res.data.user))
+      localStorage.setItem("user", JSON.stringify(res.data))
       navigate("/")
     } catch (e) {
       setError("Email o contraseña incorrectos.")

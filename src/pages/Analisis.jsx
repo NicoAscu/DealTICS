@@ -41,23 +41,28 @@ export default function Analisis() {
     if (!position || !selectedBusiness) return
     setLoading(true)
     try {
+      // 1. Guardar ubicación
       const locRes = await api.post("/locations", {
-        user_id: 1,
+        user_id: JSON.parse(localStorage.getItem("user") || "{}")?.id || 1,
         latitude: position.lat,
         longitude: position.lng,
         radius_m: radius,
       })
       const locationId = locRes.data.id
 
+      // 2. Crear análisis
       const anaRes = await api.post("/analyses", {
-        user_id: 1,
+        user_id: JSON.parse(localStorage.getItem("user") || "{}")?.id || 1,
         location_id: locationId,
         business_id: parseInt(selectedBusiness),
       })
 
+      // 3. Guardar resultado completo en localStorage
       localStorage.setItem("analysisResult", JSON.stringify(anaRes.data))
       navigate("/loading")
     } catch (e) {
+      console.error("Error en análisis:", e)
+      // Si falla el backend igual navegamos para mostrar datos mock
       navigate("/loading")
     }
   }

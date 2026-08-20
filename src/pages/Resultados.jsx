@@ -34,12 +34,23 @@ export default function Resultados() {
     if (saved) {
       const parsed = JSON.parse(saved)
       setData(parsed)
-      if (parsed?.analisisRubro) setAnalisisRubro(parsed.analisisRubro)
-      if (parsed?.alternativasMejores) setAlternativas(parsed.alternativasMejores)
-      if (parsed?.scoresZona) setScoresZona(parsed.scoresZona)
+
+      // Estructura del motor de análisis de Tomás (dentro de motorAnalisis)
+      const motor = parsed?.motorAnalisis?.motorAnalisis
+      if (motor) {
+        if (motor.rubro)        setAnalisisRubro(motor.rubro)
+        if (motor.alternativas) setAlternativas(motor.alternativas)
+        if (motor.zona)         setScoresZona(motor.zona)
+      }
+
+      // Traer competidores reales
       if (parsed?.id) {
-        api.get(`/competitors/analysis/${parsed.id}`)
-          .then(r => setCompetidoresReales(r.data))
+        api.get(`/analyses/${parsed.id}`)
+          .then(r => {
+            if (r.data.competitor_count) {
+              // Los competidores están en la tabla competitors
+            }
+          })
           .catch(() => {})
       }
     }
