@@ -1,6 +1,4 @@
 import { useState, useMemo } from "react"
-import SimuladorDashboard from "../components/SimuladorDashboard"
-import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../services/api"
 import SimuladorDashboard from "../components/SimuladorDashboard"
@@ -10,45 +8,24 @@ function calcularMetricas({ alquiler, salarios, servicios, inversionInicial, pre
   const ingresosMensuales = precioPromedio * ventasMensuales
   const gananciaUnidad = precioPromedio * (margen / 100)
   const puntoEquilibrioUnidades = gananciaUnidad > 0 ? Math.ceil(costosMensuales / gananciaUnidad) : 0
+  const puntoEquilibrioIngresos = puntoEquilibrioUnidades * precioPromedio
   const rentabilidadMensual = ingresosMensuales * (margen / 100) - costosMensuales
   const tiempoRecuperacionMeses = rentabilidadMensual > 0 ? Math.ceil(inversionInicial / rentabilidadMensual) : null
-  const handleGuardar = async () => {
-    const analysisId = JSON.parse(localStorage.getItem("analysisResult") || "{}")?.id || 1
+  const roiAnual = inversionInicial > 0 ? parseFloat(((rentabilidadMensual * 12 / inversionInicial) * 100).toFixed(1)) : 0
 
-    try {
-      await api.post("/cost-estimations", {
-        analysis_id: analysisId,
-        renovation_cost: 0,
-        furniture_cost: 0,
-        equipment_cost: 0,
-        software_cost: 0,
-        marketing_initial: 0,
-        initial_stock: 0,
-        monthly_salaries: salarios,
-        monthly_services: servicios,
-        monthly_suppliers: 0,
-      })
+  const clasificacionViabilidad =
+    roiAnual >= 30 ? "riesgo_bajo" :
+    roiAnual >= 15 ? "riesgo_medio" : "riesgo_alto"
 
-      await api.post("/scenarios", {
-        analysis_id: analysisId,
-        name: "Escenario principal",
-        monthly_revenue_est: metricas.ingresosMensuales,
-        avg_product_price: precioPromedio,
-        monthly_sales_vol: ventasMensuales,
-        profit_margin: margen,
-      })
+  const alertas = []
+  if (tiempoRecuperacionMeses > 36) alertas.push("⚠ Tiempo de recuperación largo (más de 3 años)")
+  if (rentabilidadMensual < 0) alertas.push("⚠ El negocio no cubre sus costos con las ventas estimadas")
+  if (roiAnual < 10) alertas.push("⚠ ROI anual bajo — considerá ajustar precios o reducir costos")
 
-      alert("Escenario guardado correctamente.")
-    } catch (e) {
-      alert("No se pudo guardar. Verificá que hayas hecho un análisis primero.")
-    }
-  }
   return {
-    costosMensuales,
-    ingresosMensuales,
-    puntoEquilibrioUnidades,
-    rentabilidadMensual,
-    tiempoRecuperacionMeses,
+    costosMensuales, ingresosMensuales, puntoEquilibrioUnidades,
+    puntoEquilibrioIngresos, rentabilidadMensual, tiempoRecuperacionMeses,
+    roiAnual, clasificacionViabilidad, alertas,
   }
 }
 
@@ -75,6 +52,7 @@ function Slider({ label, value, onChange, min, max, step, prefix = "", suffix = 
 }
 
 export default function Simulador() {
+  const navigate = useNavigate()
   const [alquiler, setAlquiler] = useState(350000)
   const [salarios, setSalarios] = useState(800000)
   const [servicios, setServicios] = useState(120000)
@@ -87,10 +65,39 @@ export default function Simulador() {
     alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen
   }), [alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen])
 
+  const handleGuardar = async () => {
+    const analysisId = JSON.parse(localStorage.getItem("analysisResult") || "{}")?.id || 1
+    try {
+      await api.post("/cost-estimations", {
+        analysis_id: analysisId,
+        renovation_cost: 0,
+        furniture_cost: 0,
+        equipment_cost: 0,
+        software_cost: 0,
+        marketing_initial: 0,
+        initial_stock: 0,
+        monthly_salaries: salarios,
+        monthly_services: servicios,
+        monthly_suppliers: 0,
+      })
+      await api.post("/scenarios", {
+        analysis_id: analysisId,
+        name: "Escenario principal",
+        monthly_revenue_est: metricas.ingresosMensuales,
+        avg_product_price: precioPromedio,
+        monthly_sales_vol: ventasMensuales,
+        profit_margin: margen,
+      })
+      alert("Escenario guardado correctamente.")
+    } catch (e) {
+      alert("No se pudo guardar. Verificá que hayas hecho un análisis primero.")
+    }
+  }
+
   return (
     <div className="page-enter" style={{ display: "flex", minHeight: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
 
-      {/* Panel izquierdo — controles */}
+      {/* Panel izquierdo */}
       <div style={{ width: 380, background: "var(--color-surface)", margin: 16,
         borderRadius: 16, padding: 28, border: "1px solid var(--color-border)",
         height: "fit-content" }}>
@@ -121,14 +128,16 @@ export default function Simulador() {
           min={10} max={5000} step={10} suffix=" unid." />
         <Slider label="Margen de ganancia" value={margen} onChange={setMargen}
           min={5} max={80} step={1} suffix="%" />
-      </div>
+
         <button onClick={handleGuardar} style={{
           width: "100%", padding: "14px", borderRadius: 12, fontSize: 15,
           fontWeight: 700, cursor: "pointer", border: "none",
           background: "var(--color-primary)", color: "var(--color-on-primary)",
           marginTop: 8
         }}>Guardar escenario</button>
-      {/* Panel derecho — dashboard */}
+      </div>
+
+      {/* Panel derecho */}
       <div style={{ flex: 1, padding: 16 }}>
         <SimuladorDashboard metricas={metricas} inversionInicial={inversionInicial} />
       </div>

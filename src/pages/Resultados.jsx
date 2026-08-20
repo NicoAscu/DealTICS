@@ -11,7 +11,7 @@ const indicadores = [
   { label: "Tráfico peatonal", key: "pedestrian", default: 74 },
 ]
 
-const rubrosRecomendados = ["Cafetería de especialidad", "Brunch", "Panadería boutique", "Heladería"]
+const rubrosRecomendadosFallback = ["Cafetería de especialidad", "Brunch", "Panadería boutique", "Heladería"]
 
 const competidores = [
   { label: "Café", value: 80 },
@@ -24,6 +24,9 @@ const competidores = [
 export default function Resultados() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
+  const [analisisRubro, setAnalisisRubro] = useState(null)
+  const [alternativas, setAlternativas] = useState([])
+  const [scoresZona, setScoresZona] = useState(null)
   const [competidoresReales, setCompetidoresReales] = useState([])
 
   useEffect(() => {
@@ -31,6 +34,9 @@ export default function Resultados() {
     if (saved) {
       const parsed = JSON.parse(saved)
       setData(parsed)
+      if (parsed?.analisisRubro) setAnalisisRubro(parsed.analisisRubro)
+      if (parsed?.alternativasMejores) setAlternativas(parsed.alternativasMejores)
+      if (parsed?.scoresZona) setScoresZona(parsed.scoresZona)
       if (parsed?.id) {
         api.get(`/competitors/analysis/${parsed.id}`)
           .then(r => setCompetidoresReales(r.data))
@@ -190,8 +196,29 @@ export default function Resultados() {
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
                 Rubros recomendados
               </h4>
+              {scoresZona && (
+                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10,
+                  background: "var(--color-bg)", border: "1px solid var(--color-border)" }}>
+                  <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+                    {scoresZona.descripcionZona} · Poder <strong>{scoresZona.nivelPoder}</strong> · Demanda <strong>{scoresZona.nivelDemanda}</strong>
+                  </span>
+                </div>
+              )}
+              {analisisRubro && (
+                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10,
+                  background: analisisRubro.viabilidad === "no_recomendado" ? "#fee2e2" : "#dcfce7",
+                  border: `1px solid ${analisisRubro.viabilidad === "no_recomendado" ? "#ef4444" : "#22c55e"}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 700,
+                    color: analisisRubro.viabilidad === "no_recomendado" ? "#991b1b" : "#166534" }}>
+                    {analisisRubro.mensajeViabilidad}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 4 }}>
+                    Inversión estimada: USD {analisisRubro.inversionMinUSD?.toLocaleString()} – {analisisRubro.inversionMaxUSD?.toLocaleString()}
+                  </div>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {rubrosRecomendados.map((r, i) => (
+                {(alternativas.length > 0 ? alternativas.map(a => a.nombre) : rubrosRecomendadosFallback).map((r, i) => (
                   <span key={r} style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
                     background: i === 0 ? "var(--color-primary)" : "transparent",
