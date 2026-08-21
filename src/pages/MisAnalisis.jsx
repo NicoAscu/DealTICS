@@ -57,40 +57,37 @@ export default function MisAnalisis() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {analisis.map(a => {
-              const risk = riskConfig[a.risk_level] || riskConfig.medium
-              return (
-                <div key={a.id} onClick={() => navigate("/resultados")}
-                  className="card-hover"
-                  style={{ background: "var(--color-surface)", borderRadius: 14,
-                    border: "1px solid var(--color-border)", padding: "20px 24px",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    cursor: "pointer" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                    <div style={{ width: 52, height: 52, borderRadius: 12,
-                      background: "var(--color-bg)", display: "flex", flexDirection: "column",
-                      alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text)" }}>
-                        {a.opportunity_index}
-                      </span>
-                      <span style={{ fontSize: 9, color: "var(--color-text-muted)" }}>/100</span>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)" }}>
-                        {a.business_name} · {a.neighborhood}
-                      </div>
-                      <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
-                        Radio {a.radius_m}m · {a.created_at}
-                      </div>
-                    </div>
+            {analisis.map(a => (
+              <div key={a.id} onClick={() => navigate("/resultados")}
+                className="card-hover"
+                style={{ background: "var(--color-surface)", borderRadius: 14,
+                  border: "1px solid var(--color-border)", padding: "20px 24px",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 12,
+                    background: "var(--color-bg)", display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text)" }}>
+                      {a.opportunity_index}
+                    </span>
+                    <span style={{ fontSize: 9, color: "var(--color-text-muted)" }}>/100</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <RiskBadge level={a.risk_level} size="sm" />
-                    <span style={{ color: "var(--color-text-muted)", fontSize: 18 }}>→</span>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)" }}>
+                      {a.business_name} · {a.neighborhood}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
+                      Radio {a.radius_m}m · {a.created_at}
+                    </div>
                   </div>
                 </div>
-              )
-            })}
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <RiskBadge level={a.risk_level} size="sm" />
+                  <span style={{ color: "var(--color-text-muted)", fontSize: 18 }}>→</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
