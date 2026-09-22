@@ -58,7 +58,11 @@ export default function Analisis() {
       })
 
       // 3. Guardar resultado completo en localStorage
-      localStorage.setItem("analysisResult", JSON.stringify(anaRes.data))
+      localStorage.setItem("analysisResult", JSON.stringify({
+        ...anaRes.data,
+        _mapPosition: { lat: position.lat, lng: position.lng },
+        _radius: radius,
+      }))
       navigate("/loading")
     } catch (e) {
       console.error("Error en análisis:", e)

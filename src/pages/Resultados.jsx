@@ -2,13 +2,21 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import RiskBadge from "../components/RiskBadge"
 import api from "../services/api"
+import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
+import markerIcon from "leaflet/dist/images/marker-icon.png"
+import markerShadow from "leaflet/dist/images/marker-shadow.png"
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({ iconUrl: markerIcon, shadowUrl: markerShadow })
 
 const indicadores = [
-  { label: "Demanda potencial", key: "demand", default: 82 },
-  { label: "Poder adquisitivo", key: "income", default: 67 },
-  { label: "Competencia", key: "competition", default: 45 },
-  { label: "Accesibilidad", key: "transit", default: 90 },
-  { label: "Tráfico peatonal", key: "pedestrian", default: 74 },
+  { label: "Demanda potencial", value: data?.breakdown?.competition?.score ?? 82 },
+  { label: "Poder adquisitivo", value: Math.round((data?.breakdown?.poder_adq?.raw ?? 0.67) * 100) },
+  { label: "Competencia", value: data?.breakdown?.competition?.score ?? 45 },
+  { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 90 },
+  { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 74 },
 ]
 
 const rubrosRecomendadosFallback = ["Cafetería de especialidad", "Brunch", "Panadería boutique", "Heladería"]
@@ -28,12 +36,16 @@ export default function Resultados() {
   const [alternativas, setAlternativas] = useState([])
   const [scoresZona, setScoresZona] = useState(null)
   const [competidoresReales, setCompetidoresReales] = useState([])
+  const [mapPosition, setMapPosition] = useState(null)
+  const [mapRadius, setMapRadius] = useState(500)
 
   useEffect(() => {
     const saved = localStorage.getItem("analysisResult")
     if (saved) {
       const parsed = JSON.parse(saved)
       setData(parsed)
+      if (parsed?._mapPosition) setMapPosition(parsed._mapPosition)
+        if (parsed?._radius) setMapRadius(parsed._radius)
 
       // Estructura del motor de análisis de Tomás (dentro de motorAnalisis)
       const motor = parsed?.motorAnalisis?.motorAnalisis
@@ -56,8 +68,10 @@ export default function Resultados() {
     }
   }, [])
 
-  const score = data?.opportunity_index || 78
+  const score = data?.opportunity_index ?? 0
   const risk = data?.risk_level || "medium"
+  const neighborhood = data?.neighborhood || data?.location?.neighborhood || "—"
+  const businessName = data?.business_name || data?.business?.name || "—"
   const riskLabel = { low: "BAJO", medium: "MEDIO", high: "ALTO" }[risk]
   const riskColor = { low: "#22c55e", medium: "#f59e0b", high: "#ef4444" }[risk]
 
@@ -71,18 +85,31 @@ export default function Resultados() {
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border)",
           display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--color-text-muted)" }}>
           <span style={{ color: "var(--color-accent)" }}>●</span>
-          Palermo · radio 500 m
+          {neighborhood} · radio {mapRadius}m
         </div>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-          position: "relative", background: "var(--color-bg)" }}>
-          {[160, 110, 60].map((r, i) => (
-            <div key={i} style={{
-              position: "absolute", width: r * 2, height: r * 2, borderRadius: "50%",
-              border: "1px dashed var(--color-border)"
-            }} />
-          ))}
-          <div style={{ width: 14, height: 14, borderRadius: "50%",
-            background: "var(--color-primary)", zIndex: 1 }} />
+        <div style={{ flex: 1, position: "relative" }}>
+          {mapPosition ? (
+            <MapContainer
+              center={[mapPosition.lat, mapPosition.lng]}
+              zoom={15}
+              style={{ height: "100%", width: "100%" }}
+              zoomControl={false}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <Marker position={[mapPosition.lat, mapPosition.lng]} />
+              <Circle
+                center={[mapPosition.lat, mapPosition.lng]}
+                radius={mapRadius}
+                pathOptions={{ color: "#1a2b4a", fillColor: "#1a2b4a", fillOpacity: 0.05, dashArray: "6" }}
+              />
+            </MapContainer>
+          ) : (
+            <div style={{ height: "100%", display: "flex", alignItems: "center",
+              justifyContent: "center", background: "var(--color-bg)",
+              color: "var(--color-text-muted)", fontSize: 13 }}>
+              Sin ubicación guardada
+            </div>
+          )}
         </div>
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border)" }}>
           <button onClick={() => navigate("/analisis")} style={{
@@ -106,7 +133,7 @@ export default function Resultados() {
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)",
                 letterSpacing: 1, marginBottom: 4 }}>RESULTADOS DEL ANÁLISIS</div>
               <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--color-text)" }}>
-                {data?.business_name || "Cafetería"} · {data?.neighborhood || "Palermo, CABA"}
+                {businessName} · {neighborhood}
               </h2>
             </div>
             <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>ACTUALIZADO HOY</span>
@@ -167,11 +194,11 @@ export default function Resultados() {
                   <div style={{ display: "flex", justifyContent: "space-between",
                     fontSize: 13, color: "var(--color-text)", marginBottom: 4 }}>
                     <span>{ind.label}</span>
-                    <span style={{ fontWeight: 700 }}>{ind.default}%</span>
+                    <span style={{ fontWeight: 700 }}>{ind.value}%</span>
                   </div>
                   <div style={{ height: 4, background: "var(--color-border)", borderRadius: 2 }}>
-                    <div style={{ height: "100%", borderRadius: 2, background: "var(--color-primary)",
-                      width: `${ind.default}%` }} />
+                  <div style={{ height: "100%", borderRadius: 2, background: "var(--color-primary)",
+                      width: `${ind.value}%` }} />
                   </div>
                 </div>
               ))}
