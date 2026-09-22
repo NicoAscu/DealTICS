@@ -11,14 +11,6 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png"
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, shadowUrl: markerShadow })
 
-const indicadores = [
-  { label: "Demanda potencial", value: data?.breakdown?.competition?.score ?? 82 },
-  { label: "Poder adquisitivo", value: Math.round((data?.breakdown?.poder_adq?.raw ?? 0.67) * 100) },
-  { label: "Competencia", value: data?.breakdown?.competition?.score ?? 45 },
-  { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 90 },
-  { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 74 },
-]
-
 const rubrosRecomendadosFallback = ["Cafetería de especialidad", "Brunch", "Panadería boutique", "Heladería"]
 
 const competidores = [
@@ -45,9 +37,8 @@ export default function Resultados() {
       const parsed = JSON.parse(saved)
       setData(parsed)
       if (parsed?._mapPosition) setMapPosition(parsed._mapPosition)
-        if (parsed?._radius) setMapRadius(parsed._radius)
+      if (parsed?._radius) setMapRadius(parsed._radius)
 
-      // Estructura del motor de análisis de Tomás (dentro de motorAnalisis)
       const motor = parsed?.motorAnalisis?.motorAnalisis
       if (motor) {
         if (motor.rubro)        setAnalisisRubro(motor.rubro)
@@ -55,14 +46,9 @@ export default function Resultados() {
         if (motor.zona)         setScoresZona(motor.zona)
       }
 
-      // Traer competidores reales
       if (parsed?.id) {
         api.get(`/analyses/${parsed.id}`)
-          .then(r => {
-            if (r.data.competitor_count) {
-              // Los competidores están en la tabla competitors
-            }
-          })
+          .then(r => {})
           .catch(() => {})
       }
     }
@@ -72,8 +58,14 @@ export default function Resultados() {
   const risk = data?.risk_level || "medium"
   const neighborhood = data?.neighborhood || data?.location?.neighborhood || "—"
   const businessName = data?.business_name || data?.business?.name || "—"
-  const riskLabel = { low: "BAJO", medium: "MEDIO", high: "ALTO" }[risk]
-  const riskColor = { low: "#22c55e", medium: "#f59e0b", high: "#ef4444" }[risk]
+
+  const indicadores = [
+    { label: "Demanda potencial", value: data?.breakdown?.competition?.score ?? 82 },
+    { label: "Poder adquisitivo", value: Math.round((data?.breakdown?.poder_adq?.raw ?? 0.67) * 100) },
+    { label: "Competencia", value: data?.breakdown?.competition?.score ?? 45 },
+    { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 90 },
+    { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 74 },
+  ]
 
   return (
     <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)", overflow: "hidden" }}>
@@ -184,7 +176,6 @@ export default function Resultados() {
           {/* Indicadores + Competidores */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr",
             borderBottom: "1px solid var(--color-border)" }}>
-            {/* Indicadores */}
             <div style={{ padding: 24, borderRight: "1px solid var(--color-border)" }}>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 16 }}>
                 Indicadores clave
@@ -197,14 +188,13 @@ export default function Resultados() {
                     <span style={{ fontWeight: 700 }}>{ind.value}%</span>
                   </div>
                   <div style={{ height: 4, background: "var(--color-border)", borderRadius: 2 }}>
-                  <div style={{ height: "100%", borderRadius: 2, background: "var(--color-primary)",
+                    <div style={{ height: "100%", borderRadius: 2, background: "var(--color-primary)",
                       width: `${ind.value}%` }} />
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Competidores */}
             <div style={{ padding: 24 }}>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 4 }}>
                 Competidores por rubro
@@ -229,7 +219,8 @@ export default function Resultados() {
           </div>
 
           {/* Rubros recomendados */}
-          <div style={{ padding: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ padding: 24, display: "flex", justifyContent: "space-between",
+            alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
                 Rubros recomendados
