@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
+import logoLight from "../assets/dealtics-wordmark.svg"
+import logoDark from "../assets/dealtics-wordmark-dark.svg"
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -40,15 +42,8 @@ export default function Navbar() {
       padding: "0 32px", height: "56px",
       position: "sticky", top: 0, zIndex: 100,
     }}>
-      <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8,
-          background: "var(--color-primary)",
-          display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "white", fontSize: 16 }}>◎</span>
-        </div>
-        <span style={{ fontWeight: 700, fontSize: 18, color: "var(--color-text)" }}>
-          Deal<span style={{ color: "var(--color-accent)" }}>TICS</span>
-        </span>
+      <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+        <img src={dark ? logoDark : logoLight} alt="DealTICS" style={{ height: 28, width: "auto" }} />
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8,

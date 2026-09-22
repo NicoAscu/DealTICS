@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import HowItWorksModal from "../components/HowItWorksModal"
+import { MapContainer, TileLayer } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
 
 const stats = [
   { label: "DENSIDAD", value: "1.240", unit: "hab/km²" },
@@ -91,26 +93,22 @@ export default function Home() {
           }}>✓</div>
         </div>
 
-        {/* Mapa placeholder */}
-        <div style={{ height: 280, background: "var(--color-bg)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          position: "relative" }}>
-          <div style={{ position: "absolute", inset: 0, display: "flex",
-            alignItems: "center", justifyContent: "center" }}>
-            {[120, 80, 40].map((r, i) => (
-              <div key={i} style={{
-                position: "absolute", width: r * 2, height: r * 2,
-                borderRadius: "50%", border: "1px dashed var(--color-text-muted)",
-                opacity: 0.4
-              }} />
-            ))}
-            <div style={{
-              width: 12, height: 12, borderRadius: "50%",
-              background: "var(--color-primary)", zIndex: 1
-            }} />
-          </div>
-          <div style={{ position: "absolute", top: 8, right: 8, fontSize: 11,
-            color: "var(--color-text-muted)", background: "var(--color-surface)",
+        {/* Mapa real */}
+        <div style={{ height: 280, position: "relative", overflow: "hidden" }}>
+          <MapContainer
+            center={[-34.6037, -58.3816]}
+            zoom={14}
+            style={{ height: "100%", width: "100%" }}
+            zoomControl={false}
+            dragging={false}
+            scrollWheelZoom={false}
+            doubleClickZoom={false}
+            touchZoom={false}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          </MapContainer>
+          <div style={{ position: "absolute", top: 8, right: 8, zIndex: 1000,
+            fontSize: 11, color: "var(--color-text-muted)", background: "var(--color-surface)",
             padding: "2px 8px", borderRadius: 20 }}>● BAJO</div>
         </div>
 

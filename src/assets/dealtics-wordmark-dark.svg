@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D9E75"/>
+      <stop offset="100%" stop-color="#185FA5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo oscuro -->
+  <rect x="0" y="0" width="900" height="220" rx="24" fill="#042C53"/>
+
+  <!-- Ícono -->
+  <rect x="20" y="10" width="200" height="200" rx="46" fill="url(#grad)"/>
+
+  <!-- Grilla sutil -->
+  <line x1="20"  y1="60"  x2="220" y2="60"  stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="20"  y1="110" x2="220" y2="110" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="20"  y1="160" x2="220" y2="160" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="70"  y1="10"  x2="70"  y2="210" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="120" y1="10"  x2="120" y2="210" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="170" y1="10"  x2="170" y2="210" stroke="white" stroke-width="0.8" opacity="0.10"/>
+
+  <!-- Letra D -->
+  <path d="M73 52 L73 168 L97 168 C150 168 180 142 180 110 C180 78 150 52 97 52 Z"
+        fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pin -->
+  <path d="M180 24 C160 24 144 40 144 60 C144 77 160 91 180 114 C200 91 216 77 216 60 C216 40 200 24 180 24Z"
+        fill="white"/>
+  <circle cx="180" cy="59" r="13" fill="#1D9E75"/>
+
+  <!-- Wordmark blanco / verde claro -->
+  <text x="252" y="142"
+        font-family="'DM Sans', 'Outfit', 'Nunito Sans', sans-serif"
+        font-size="110"
+        font-weight="500"
+        letter-spacing="-3"
+        fill="white">Deal</text>
+  <text x="552" y="142"
+        font-family="'DM Sans', 'Outfit', 'Nunito Sans', sans-serif"
+        font-size="110"
+        font-weight="500"
+        letter-spacing="-3"
+        fill="#5DCAA5">Tics</text>
+</svg>
