@@ -54,17 +54,18 @@ export default function Resultados() {
     }
   }, [])
 
-  const score = data?.opportunity_index ?? 0
+  const score = parseFloat(data?.opportunity_index ?? 0)
   const risk = data?.risk_level || "medium"
-  const neighborhood = data?.neighborhood || data?.location?.neighborhood || "—"
-  const businessName = data?.business_name || data?.business?.name || "—"
+  const motor = data?.motorAnalisis?.motorAnalisis
+  const neighborhood = data?.neighborhood || motor?.zona?.descripcionZona || "Zona analizada"
+  const businessName = motor?.rubro?.nombre || data?.business_name || "Negocio"
 
   const indicadores = [
-    { label: "Demanda potencial", value: data?.breakdown?.competition?.score ?? 82 },
-    { label: "Poder adquisitivo", value: Math.round((data?.breakdown?.poder_adq?.raw ?? 0.67) * 100) },
-    { label: "Competencia", value: data?.breakdown?.competition?.score ?? 45 },
-    { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 90 },
-    { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 74 },
+    { label: "Demanda potencial", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0.5) * 100) },
+    { label: "Poder adquisitivo", value: Math.round((motor?.zona?.poderAdquisitivoScore ?? 0.5) * 100) },
+    { label: "Competencia", value: data?.breakdown?.competition?.score ?? 0 },
+    { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 0 },
+    { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 0 },
   ]
 
   return (
@@ -158,10 +159,10 @@ export default function Resultados() {
                 La zona muestra demanda sólida y competencia moderada para un negocio de ticket medio.
               </p>
               <div style={{ display: "flex", gap: 24 }}>
-                {[
-                  { label: "DEMANDA", value: data?.breakdown?.competition?.score || 82 },
-                  { label: "COMPETENCIA", value: data?.competitor_count || 12 },
-                  { label: "TICKET", value: "$8.4k" },
+              {[
+                  { label: "DEMANDA", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0) * 100) + "%" },
+                  { label: "COMPETENCIA", value: data?.competitor_count ?? 0 },
+                  { label: "PROB. ÉXITO", value: parseFloat(data?.success_probability ?? 0).toFixed(0) + "%" },
                 ].map(m => (
                   <div key={m.label}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: "var(--color-text-muted)",
