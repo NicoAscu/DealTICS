@@ -3,15 +3,6 @@ import { useNavigate } from "react-router-dom"
 import api from "../services/api"
 import RiskBadge from "../components/RiskBadge"
 
-const mockAnalisis = [
-  { id: 1, neighborhood: "Palermo, CABA", business_name: "Cafetería", opportunity_index: 78,
-    risk_level: "low", radius_m: 500, created_at: "2026-06-15" },
-  { id: 2, neighborhood: "Villa Crespo, CABA", business_name: "Kiosco", opportunity_index: 64,
-    risk_level: "medium", radius_m: 1000, created_at: "2026-06-20" },
-  { id: 3, neighborhood: "Flores, CABA", business_name: "Panadería", opportunity_index: 51,
-    risk_level: "high", radius_m: 500, created_at: "2026-06-28" },
-]
-
 export default function MisAnalisis() {
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState([])
@@ -24,9 +15,32 @@ export default function MisAnalisis() {
     const user = JSON.parse(userData)
     api.get(`/analyses/user/${user.id}`)
       .then(r => setAnalisis(r.data))
-      .catch(() => setAnalisis(mockAnalisis))
+      .catch(() => setAnalisis([]))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleAbrir = (a) => {
+    // Guardar el análisis elegido en localStorage para que Resultados lo muestre
+    const saved = {
+      ...a,
+      _mapPosition: a._mapPosition || null,
+      _radius: a._mapPosition ? (a._radius || 500) : null,
+    }
+    localStorage.setItem("analysisResult", JSON.stringify(saved))
+    navigate("/resultados")
+  }
+
+  const formatFecha = (iso) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })
+  }
+
+  const getNombre = (a) => {
+    const motor = a?.motorAnalisis?.motorAnalisis
+    const rubro = motor?.rubro?.nombre || "Análisis"
+    const zona = motor?.zona?.descripcionZona || `#${a.id}`
+    return `${rubro} · ${zona}`
+  }
 
   return (
     <div className="page-enter" style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)", padding: 32 }}>
@@ -58,7 +72,7 @@ export default function MisAnalisis() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {analisis.map(a => (
-              <div key={a.id} onClick={() => navigate("/resultados")}
+              <div key={a.id} onClick={() => handleAbrir(a)}
                 className="card-hover"
                 style={{ background: "var(--color-surface)", borderRadius: 14,
                   border: "1px solid var(--color-border)", padding: "20px 24px",
@@ -69,16 +83,16 @@ export default function MisAnalisis() {
                     background: "var(--color-bg)", display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: "center" }}>
                     <span style={{ fontSize: 16, fontWeight: 800, color: "var(--color-text)" }}>
-                      {a.opportunity_index}
+                      {parseFloat(a.opportunity_index).toFixed(0)}
                     </span>
                     <span style={{ fontSize: 9, color: "var(--color-text-muted)" }}>/100</span>
                   </div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)" }}>
-                      {a.business_name} · {a.neighborhood}
+                      {getNombre(a)}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
-                      Radio {a.radius_m}m · {a.created_at}
+                      Radio {a.radius_m || "—"}m · {formatFecha(a.created_at)}
                     </div>
                   </div>
                 </div>

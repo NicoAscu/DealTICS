@@ -120,7 +120,11 @@ function TarjetaEscenario({ analisis, label, recomendado, onSelect, selected }) 
     </div>
   )
 }
-
+function getNombre(a) {
+  const motor = a?.motorAnalisis?.motorAnalisis
+  if (motor?.rubro?.nombre) return `${motor.rubro.nombre} · #${a.id}`
+  return `Análisis #${a.id} · ${new Date(a.created_at).toLocaleDateString("es-AR")}`
+}
 export default function Comparador() {
   const navigate = useNavigate()
   const [historial, setHistorial] = useState([])
@@ -191,20 +195,20 @@ export default function Comparador() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto" }}>
                 {historial.map(a => (
                   <div key={a.id} onClick={() => handleSeleccionar(a)}
-                    style={{ padding: "14px 16px", borderRadius: 10,
-                      border: "1px solid var(--color-border)", cursor: "pointer",
-                      background: "var(--color-bg)",
-                      display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)" }}>
-                        Análisis #{a.id}
-                      </div>
-                      <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
-                        {new Date(a.created_at).toLocaleDateString()} · Índice: {parseFloat(a.opportunity_index).toFixed(0)}/100
-                      </div>
+                  style={{ padding: "14px 16px", borderRadius: 10,
+                    border: "1px solid var(--color-border)", cursor: "pointer",
+                    background: "var(--color-bg)",
+                    display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)" }}>
+                      {getNombre(a)}
                     </div>
-                    <span style={{ fontSize: 18, color: "var(--color-text-muted)" }}>→</span>
+                    <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+                      {new Date(a.created_at).toLocaleDateString("es-AR")} · Índice: {parseFloat(a.opportunity_index).toFixed(0)}/100 · Riesgo {a.risk_level === "low" ? "bajo" : a.risk_level === "medium" ? "medio" : "alto"}
+                    </div>
                   </div>
+                  <span style={{ fontSize: 18, color: "var(--color-text-muted)" }}>→</span>
+                </div>
                 ))}
               </div>
             )}

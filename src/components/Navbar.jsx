@@ -40,18 +40,12 @@ export default function Navbar() {
       display: "flex", alignItems: "center",
       justifyContent: "space-between",
       padding: "0 32px", height: "56px",
-      position: "sticky", top: 0, zIndex: 100,
+      position: "sticky", top: 0, zIndex: 1000,
     }}>
       <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
         <img src={dark ? logoDark : logoLight} alt="DealTICS" style={{ height: 28, width: "auto" }} />
       </Link>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8,
-        background: "var(--color-bg)", borderRadius: 8, padding: "4px 8px" }}>
-        <input placeholder="Buscar dirección o coordenadas..."
-          style={{ background: "transparent", border: "none", outline: "none",
-            color: "var(--color-text)", fontSize: 14, width: 280 }} />
-      </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
         {links.map(l => (

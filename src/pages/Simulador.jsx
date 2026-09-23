@@ -102,15 +102,22 @@ export default function Simulador() {
         borderRadius: 16, padding: 28, border: "1px solid var(--color-border)",
         height: "fit-content" }}>
 
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>
-          Simulador de escenarios
+<h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>
+          Simulador financiero
         </h2>
-        <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 24 }}>
-          Ajustá las variables para ver cómo cambia la rentabilidad.
+        <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 8 }}>
+          Todos los valores están en <strong>pesos argentinos (ARS)</strong>.
+          El simulador es independiente del análisis de zona — usalo para proyectar
+          la rentabilidad de tu negocio según tus propios costos e ingresos estimados.
         </p>
+        <div style={{ fontSize: 12, color: "var(--color-accent)", marginBottom: 24,
+          padding: "8px 12px", background: "var(--color-bg)", borderRadius: 8,
+          border: "1px solid var(--color-border)" }}>
+          💡 Tip: usá los datos de tu análisis de zona como referencia para estimar el volumen de ventas.
+        </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)",
-          letterSpacing: 1, marginBottom: 12 }}>COSTOS</div>
+          letterSpacing: 1, marginBottom: 12 }}>COSTOS MENSUALES (ARS)</div>
         <Slider label="Alquiler mensual" value={alquiler} onChange={setAlquiler}
           min={50000} max={1500000} step={10000} prefix="$" />
         <Slider label="Salarios" value={salarios} onChange={setSalarios}
@@ -121,7 +128,7 @@ export default function Simulador() {
           min={500000} max={20000000} step={100000} prefix="$" />
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)",
-          letterSpacing: 1, marginBottom: 12, marginTop: 24 }}>VARIABLES COMERCIALES</div>
+          letterSpacing: 1, marginBottom: 12, marginTop: 24 }}>VARIABLES COMERCIALES (ARS)</div>
         <Slider label="Precio promedio" value={precioPromedio} onChange={setPrecioPromedio}
           min={500} max={50000} step={100} prefix="$" />
         <Slider label="Ventas mensuales estimadas" value={ventasMensuales} onChange={setVentasMensuales}
