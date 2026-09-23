@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D9E75"/>
+      <stop offset="100%" stop-color="#185FA5"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="220" height="220" rx="50" fill="url(#grad)"/>
+  <line x1="0" y1="55" x2="220" y2="55" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="0" y1="110" x2="220" y2="110" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="0" y1="165" x2="220" y2="165" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="55" y1="0" x2="55" y2="220" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="110" y1="0" x2="110" y2="220" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <line x1="165" y1="0" x2="165" y2="220" stroke="white" stroke-width="0.8" opacity="0.10"/>
+  <path d="M56 44 L56 176 L82 176 C138 176 170 148 170 110 C170 72 138 44 82 44 Z"
+        fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M170 18 C148 18 130 36 130 58 C130 76 148 92 170 116 C192 92 210 76 210 58 C210 36 192 18 170 18Z"
+        fill="white"/>
+  <circle cx="170" cy="57" r="14" fill="#1D9E75"/>
+  <text x="256" y="142"
+        font-family="'DM Sans', 'Outfit', 'Nunito Sans', sans-serif"
+        font-size="110" font-weight="500" letter-spacing="-3"
+        fill="#ffffff">Deal</text>
+  <text x="556" y="142"
+        font-family="'DM Sans', 'Outfit', 'Nunito Sans', sans-serif"
+        font-size="110" font-weight="500" letter-spacing="-3"
+        fill="#4a9fd4">Tics</text>
+</svg>
