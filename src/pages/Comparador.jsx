@@ -155,9 +155,25 @@ export default function Comparador() {
   const scoreB = parseFloat(escenarioB?.opportunity_index ?? 0)
   const diff = scoreA - scoreB
 
-  const handleSeleccionar = (analisis) => {
-    if (seleccionando === "A") setEscenarioA(analisis)
-    if (seleccionando === "B") setEscenarioB(analisis)
+  const handleSeleccionar = async (a) => {
+    try {
+      const locRes = await api.get(`/locations/${a.location_id}`)
+      const loc = locRes.data
+      const anaRes = await api.get(`/analyses/${a.id}`)
+      const anaCompleto = anaRes.data
+
+      const enriquecido = {
+        ...anaCompleto,
+        _mapPosition: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
+        _radius: loc.radius_m || 500,
+      }
+
+      if (seleccionando === "A") setEscenarioA(enriquecido)
+      if (seleccionando === "B") setEscenarioB(enriquecido)
+    } catch (e) {
+      if (seleccionando === "A") setEscenarioA(a)
+      if (seleccionando === "B") setEscenarioB(a)
+    }
     setSeleccionando(null)
   }
 

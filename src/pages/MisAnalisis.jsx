@@ -19,14 +19,26 @@ export default function MisAnalisis() {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleAbrir = (a) => {
-    // Guardar el análisis elegido en localStorage para que Resultados lo muestre
-    const saved = {
-      ...a,
-      _mapPosition: a._mapPosition || null,
-      _radius: a._mapPosition ? (a._radius || 500) : null,
+  const handleAbrir = async (a) => {
+    try {
+      // Buscar la ubicación real del análisis
+      const locRes = await api.get(`/locations/${a.location_id}`)
+      const loc = locRes.data
+
+      // Buscar el análisis completo con motorAnalisis
+      const anaRes = await api.get(`/analyses/${a.id}`)
+      const anaCompleto = anaRes.data
+
+      const saved = {
+        ...anaCompleto,
+        _mapPosition: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
+        _radius: loc.radius_m || 500,
+      }
+      localStorage.setItem("analysisResult", JSON.stringify(saved))
+    } catch (e) {
+      // Si falla, guardar lo que tenemos sin mapa
+      localStorage.setItem("analysisResult", JSON.stringify(a))
     }
-    localStorage.setItem("analysisResult", JSON.stringify(saved))
     navigate("/resultados")
   }
 
