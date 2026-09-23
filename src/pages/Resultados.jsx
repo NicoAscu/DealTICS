@@ -33,24 +33,49 @@ export default function Resultados() {
 
   useEffect(() => {
     const saved = localStorage.getItem("analysisResult")
-    if (saved) {
-      const parsed = JSON.parse(saved)
+    if (!saved) return
+
+    const parsed = JSON.parse(saved)
+
+    // Guardar posición del mapa inmediatamente
+    if (parsed?._mapPosition) setMapPosition(parsed._mapPosition)
+    if (parsed?._radius) setMapRadius(parsed._radius)
+
+    // Si el análisis guardado tiene motorAnalisis completo, usarlo
+    if (parsed?.motorAnalisis?.motorAnalisis) {
       setData(parsed)
-      if (parsed?._mapPosition) setMapPosition(parsed._mapPosition)
-      if (parsed?._radius) setMapRadius(parsed._radius)
+      const motor = parsed.motorAnalisis.motorAnalisis
+      if (motor.rubro) setAnalisisRubro(motor.rubro)
+      if (motor.alternativas) setAlternativas(motor.alternativas)
+      if (motor.zona) setScoresZona(motor.zona)
+      return
+    }
 
-      const motor = parsed?.motorAnalisis?.motorAnalisis
-      if (motor) {
-        if (motor.rubro)        setAnalisisRubro(motor.rubro)
-        if (motor.alternativas) setAlternativas(motor.alternativas)
-        if (motor.zona)         setScoresZona(motor.zona)
-      }
+    // Si no tiene motorAnalisis, buscarlo del backend
+    if (parsed?.id) {
+      api.get(`/analyses/${parsed.id}`)
+        .then(r => {
+          const completo = {
+            ...r.data,
+            _mapPosition: parsed._mapPosition,
+            _radius: parsed._radius,
+          }
+          setData(completo)
+          localStorage.setItem("analysisResult", JSON.stringify(completo))
 
-      if (parsed?.id) {
-        api.get(`/analyses/${parsed.id}`)
-          .then(r => {})
-          .catch(() => {})
-      }
+          const motor = completo?.motorAnalisis?.motorAnalisis
+          if (motor) {
+            if (motor.rubro) setAnalisisRubro(motor.rubro)
+            if (motor.alternativas) setAlternativas(motor.alternativas)
+            if (motor.zona) setScoresZona(motor.zona)
+          }
+        })
+        .catch(() => {
+          // Si falla el backend, usar lo que hay
+          setData(parsed)
+        })
+    } else {
+      setData(parsed)
     }
   }, [])
 
