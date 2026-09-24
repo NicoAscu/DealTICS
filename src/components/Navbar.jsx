@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import logoLight from "../assets/dealtics-wordmark.svg"
-import logoDark from "../assets/dealtics-wordmark-dark.svg"
+import logoLight from "../assets/dealtics-navbar-light.svg"
+import logoDark from "../assets/dealtics-navbar-dark.svg"
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -43,7 +43,7 @@ export default function Navbar() {
       position: "sticky", top: 0, zIndex: 1000,
     }}>
       <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-        <img src={dark ? logoDark : logoLight} alt="DealTICS" style={{ height: 28, width: "auto" }} />
+        <img src={dark ? logoDark : logoLight} alt="DealTICS" style={{ height: 32, width: "auto" }} />
       </Link>
 
 
