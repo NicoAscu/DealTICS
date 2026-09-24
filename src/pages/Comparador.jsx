@@ -48,16 +48,24 @@ function TarjetaEscenario({ analisis, label, recomendado, onSelect, selected }) 
   )
 
   const motor = analisis?.motorAnalisis?.motorAnalisis
-  const indicadores = [
-    { label: "Demanda potencial", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0.5) * 100) },
-    { label: "Poder adquisitivo", value: Math.round((motor?.zona?.poderAdquisitivoScore ?? 0.5) * 100) },
+  const indicadores = motor ? [
+    { label: "Demanda potencial", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0) * 100) },
+    { label: "Poder adquisitivo", value: Math.round((motor?.zona?.poderAdquisitivoScore ?? 0) * 100) },
     { label: "Competencia", value: analisis?.breakdown?.competition?.score ?? 0 },
     { label: "Accesibilidad", value: analisis?.breakdown?.transport?.score ?? 0 },
+  ] : [
+    { label: "Índice oportunidad", value: parseFloat(analisis?.opportunity_index ?? 0).toFixed(0) },
+    { label: "Competidores", value: analisis?.competitor_count ?? 0 },
+    { label: "Score transporte", value: analisis?.transit_score ?? 0 },
+    { label: "Flujo peatonal", value: analisis?.pedestrian_flow === "high" ? 80 : analisis?.pedestrian_flow === "medium" ? 50 : 20 },
   ]
 
   const position = analisis?._mapPosition
   const score = parseFloat(analisis?.opportunity_index ?? 0)
-  const nombre = motor?.zona?.descripcionZona || "Zona analizada"
+      const nombre = motor?.zona?.descripcionZona || 
+      (analisis?.avg_income_level === "high" ? "Zona de alto poder adquisitivo" :
+       analisis?.avg_income_level === "medium" ? "Zona de poder adquisitivo medio" :
+       "Zona analizada")
 
   return (
     <div style={{ flex: 1, background: "var(--color-surface)", borderRadius: 16,
