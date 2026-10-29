@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import RiskBadge from "../components/RiskBadge"
+import { DesgloseRiesgo, TendenciaConsumo, Recomendaciones } from "../components/PanelesResultados"
 import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
@@ -80,10 +81,10 @@ export default function Resultados() {
   const maxGrupo = Math.max(1, ...(competencia?.grupos ?? []).map(g => g.value))
 
   return (
-    <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)", overflow: "hidden" }}>
+    <div className="page-enter layout-split" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)", overflow: "hidden" }}>
 
       {/* Mapa izquierda */}
-      <div style={{ flex: 1, background: "var(--color-surface)", margin: 16,
+      <div className="panel-mapa" style={{ flex: 1, background: "var(--color-surface)", margin: 16,
         borderRadius: 16, border: "1px solid var(--color-border)",
         display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border)",
@@ -125,7 +126,7 @@ export default function Resultados() {
       </div>
 
       {/* Panel derecha */}
-      <div style={{ width: 560, minWidth: 400, overflowY: "auto", padding: "16px 16px 16px 0", height: "calc(100vh - 56px)" }}>
+      <div className="panel-lateral" style={{ width: 560, minWidth: 400, overflowY: "auto", padding: "16px 16px 16px 0", height: "calc(100vh - 56px)" }}>
         <div style={{ background: "var(--color-surface)", borderRadius: 16,
           border: "1px solid var(--color-border)", overflow: "hidden",
           display: "flex", flexDirection: "column" }}>
@@ -239,12 +240,15 @@ export default function Resultados() {
             </div>
           </div>
 
+          <DesgloseRiesgo riesgo={data.riesgo} nivel={risk} />
+          <TendenciaConsumo categoria={data._businessCategory} />
+
           {/* Rubros recomendados */}
           <div style={{ padding: 24, display: "flex", justifyContent: "space-between",
             alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-            <div>
+            <div style={{ flex: "1 1 100%" }}>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-                Rubros recomendados
+                Otros rubros recomendados para la zona
               </h4>
               {scoresZona && (
                 <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10,
@@ -267,22 +271,7 @@ export default function Resultados() {
                   </div>
                 </div>
               )}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {alternativas.length === 0 && (
-                  <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
-                    Sin recomendaciones del motor para este análisis.
-                  </span>
-                )}
-                {alternativas.map(a => a.nombre).map((r, i) => (
-                  <span key={r} style={{
-                    padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
-                    background: i === 0 ? "var(--color-primary)" : "transparent",
-                    color: i === 0 ? "white" : "var(--color-text)",
-                    border: i === 0 ? "none" : "1px solid var(--color-border)",
-                    cursor: "pointer"
-                  }}>{r}</span>
-                ))}
-              </div>
+              <Recomendaciones analysisId={data.id} alternativas={alternativas} excluir={businessName} />
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 12 }}>
                 Basado en demanda, competencia y poder adquisitivo de la zona.
               </p>

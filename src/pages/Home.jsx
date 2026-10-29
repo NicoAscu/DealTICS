@@ -8,6 +8,7 @@ const stats = [
   { label: "DENSIDAD", value: "1.240", unit: "hab/km²" },
   { label: "COMPETIDORES", value: "12", unit: "en 500 m" },
   { label: "TICKET MEDIO", value: "$8.4k", unit: "estimado" },
+  // Valores ilustrativos de la tarjeta de ejemplo del Home (no son datos reales)
 ]
 
 const steps = ["Ubicación", "Datos", "Análisis", "Resultados"]
@@ -110,6 +111,9 @@ export default function Home() {
           <div style={{ position: "absolute", top: 8, right: 8, zIndex: 1000,
             fontSize: 11, color: "var(--color-text-muted)", background: "var(--color-surface)",
             padding: "2px 8px", borderRadius: 20 }}>● BAJO</div>
+          <div style={{ position: "absolute", top: 8, left: 8, zIndex: 1000,
+            fontSize: 10, fontWeight: 700, letterSpacing: 1, color: "var(--color-text-muted)",
+            background: "var(--color-surface)", padding: "2px 8px", borderRadius: 20 }}>VISTA DE EJEMPLO</div>
         </div>
 
         {/* Stats */}

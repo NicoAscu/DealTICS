@@ -64,10 +64,8 @@ export default function Login() {
           onChange={e => setPassword(e.target.value)} style={inputStyle}
           onKeyDown={e => e.key === "Enter" && handleLogin()} />
 
-        <div style={{ textAlign: "right", marginBottom: 20 }}>
-          <Link to="/recuperar" style={{ fontSize: 12, color: "var(--color-accent)",
-            textDecoration: "none" }}>¿Olvidaste tu contraseña?</Link>
-        </div>
+        {/* "¿Olvidaste tu contraseña?" vuelve cuando el back tenga el endpoint de recuperación */}
+        <div style={{ marginBottom: 20 }} />
 
         {error && (
           <div style={{ background: "#fee2e2", color: "#991b1b", borderRadius: 8,

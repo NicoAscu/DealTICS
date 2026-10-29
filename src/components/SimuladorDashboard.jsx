@@ -1,10 +1,13 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, ReferenceLine } from "recharts"
+import { formatear } from "../services/finanzas"
 
 const viabilidadConfig = {
-  riesgo_bajo:  { label: "Riesgo bajo",  color: "#22c55e", bg: "#dcfce7" },
-  riesgo_medio: { label: "Riesgo medio", color: "#f59e0b", bg: "#fef3c7" },
-  riesgo_alto:  { label: "Riesgo alto",  color: "#ef4444", bg: "#fee2e2" },
+  riesgo_bajo:  { label: "Viabilidad financiera alta",  color: "#16a34a", bg: "#dcfce7" },
+  riesgo_medio: { label: "Viabilidad financiera media", color: "#b45309", bg: "#fef3c7" },
+  riesgo_alto:  { label: "Viabilidad financiera baja",  color: "#dc2626", bg: "#fee2e2" },
 }
+
+const fmtEje = (v) => (Math.abs(v) >= 1e6 ? `${Math.round(v / 1e5) / 10}M` : Math.abs(v) >= 1e3 ? `${Math.round(v / 1e3)}k` : v)
 
 function MetricCard({ label, value, sub, positive }) {
   return (
@@ -19,17 +22,17 @@ function MetricCard({ label, value, sub, positive }) {
   )
 }
 
-export default function SimuladorDashboard({ metricas, inversionInicial }) {
+export default function SimuladorDashboard({ metricas }) {
   const {
-    costosMensuales, ingresosMensuales, puntoEquilibrioUnidades,
+    inversionInicial, costosMensuales, ingresosMensuales, puntoEquilibrioUnidades,
     puntoEquilibrioIngresos, rentabilidadMensual, tiempoRecuperacionMeses,
     roiAnual, clasificacionViabilidad, alertas
   } = metricas
 
-  const fmt = (n) => "$" + Math.round(n).toLocaleString()
+  const fmt = (n) => formatear(n, "dinero")
   const viab = viabilidadConfig[clasificacionViabilidad] || viabilidadConfig.riesgo_medio
 
-  const proyeccion = Array.from({ length: 12 }, (_, i) => ({
+  const proyeccion = Array.from({ length: 24 }, (_, i) => ({
     mes: `M${i + 1}`,
     acumulado: Math.round(rentabilidadMensual * (i + 1) - inversionInicial),
   }))
@@ -37,7 +40,7 @@ export default function SimuladorDashboard({ metricas, inversionInicial }) {
   const comparativa = [
     { name: "Ingresos", valor: Math.round(ingresosMensuales) },
     { name: "Costos", valor: Math.round(costosMensuales) },
-    { name: "Rentabilidad", valor: Math.round(Math.max(rentabilidadMensual, 0)) },
+    { name: "Rentabilidad", valor: Math.round(rentabilidadMensual) },
   ]
 
   return (
@@ -74,8 +77,8 @@ export default function SimuladorDashboard({ metricas, inversionInicial }) {
       </div>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <MetricCard label="PUNTO DE EQUILIBRIO"
-          value={`${puntoEquilibrioUnidades} unid/mes`}
-          sub={`= ${fmt(puntoEquilibrioIngresos)} ARS`} />
+          value={puntoEquilibrioUnidades != null ? formatear(puntoEquilibrioUnidades, "ventas") : "No alcanzable"}
+          sub={puntoEquilibrioIngresos != null ? `= ${fmt(puntoEquilibrioIngresos)} en ventas` : undefined} />
         <MetricCard label="RENTABILIDAD MENSUAL" value={fmt(rentabilidadMensual)}
           positive={rentabilidadMensual >= 0} />
         <MetricCard label="RECUPERACIÓN DE INVERSIÓN"
@@ -93,9 +96,10 @@ export default function SimuladorDashboard({ metricas, inversionInicial }) {
           <BarChart data={comparativa}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={12} />
-            <YAxis stroke="var(--color-text-muted)" fontSize={12} />
-            <Tooltip formatter={(v) => "$" + v.toLocaleString()}
+            <YAxis stroke="var(--color-text-muted)" fontSize={12} tickFormatter={fmtEje} />
+            <Tooltip formatter={(v) => fmt(v)}
               contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
+            <ReferenceLine y={0} stroke="var(--color-text-muted)" />
             <Bar dataKey="valor" fill="#4a7fd4" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -105,15 +109,16 @@ export default function SimuladorDashboard({ metricas, inversionInicial }) {
       <div style={{ background: "var(--color-surface)", borderRadius: 14,
         border: "1px solid var(--color-border)", padding: 20 }}>
         <h4 style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text)", marginBottom: 16 }}>
-          Proyección de recuperación (12 meses)
+          Proyección de recuperación (24 meses)
         </h4>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={proyeccion}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-            <XAxis dataKey="mes" stroke="var(--color-text-muted)" fontSize={12} />
-            <YAxis stroke="var(--color-text-muted)" fontSize={12} />
-            <Tooltip formatter={(v) => "$" + v.toLocaleString()}
+            <XAxis dataKey="mes" stroke="var(--color-text-muted)" fontSize={12} interval={3} />
+            <YAxis stroke="var(--color-text-muted)" fontSize={12} tickFormatter={fmtEje} />
+            <Tooltip formatter={(v) => fmt(v)}
               contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
+            <ReferenceLine y={0} stroke="var(--color-text-muted)" />
             <Line type="monotone" dataKey="acumulado" stroke="#4a7fd4" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>

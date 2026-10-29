@@ -6,6 +6,9 @@ import L from "leaflet"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
 import { getUser } from "../services/api"
+import ComparacionEscenarios from "../components/ComparacionEscenarios"
+import { leerEscenariosLocales } from "../services/escenarios"
+import { nombreAnalisis } from "../services/analisis"
 import {
   leerAnalisisActual, listarHistorial, cargarAnalisis, porcentaje,
 } from "../services/analisis"
@@ -132,7 +135,7 @@ function getNombre(a) {
   if (motor?.rubro?.nombre) return `${motor.rubro.nombre} · #${a.id}`
   return `Análisis #${a.id} · ${new Date(a.created_at).toLocaleDateString("es-AR")}`
 }
-export default function Comparador() {
+function ComparadorZonas() {
   const navigate = useNavigate()
   const [historial, setHistorial] = useState([])
   const [escenarioA, setEscenarioA] = useState(null)
@@ -174,7 +177,7 @@ export default function Comparador() {
   }
 
   return (
-    <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)", padding: 24 }}>
+    <div style={{ padding: "0 24px 24px" }}>
 
       {/* Modal de selección */}
       {seleccionando && (
@@ -228,7 +231,7 @@ export default function Comparador() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 24, marginBottom: 24, position: "relative" }}>
+      <div className="fila-comparacion" style={{ display: "flex", gap: 24, marginBottom: 24, position: "relative" }}>
         <TarjetaEscenario
           analisis={escenarioA} label="A"
           recomendado={escenarioA && escenarioB && scoreA > scoreB}
@@ -267,7 +270,7 @@ export default function Comparador() {
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 18, fontWeight: 800,
                 color: diff >= 0 ? "#22c55e" : "#ef4444" }}>
-                {diff >= 0 ? "+" : ""}{diff.toFixed(0)}%
+                {diff >= 0 ? "+" : ""}{diff.toFixed(0)} pts
               </div>
               <div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>oportunidad</div>
             </div>
@@ -290,6 +293,70 @@ export default function Comparador() {
           }}>Hacer un análisis</button>
         </div>
       )}
+    </div>
+  )
+}
+
+// Escenarios financieros A vs B del análisis actual (sección 8 del anteproyecto).
+// Se arman en el Simulador; acá se muestran comparados.
+function ComparadorEscenarios() {
+  const navigate = useNavigate()
+  const actual = leerAnalisisActual()
+  const guardados = leerEscenariosLocales(actual?.id ?? null)
+
+  if (!guardados?.A || !guardados?.B) {
+    return (
+      <div style={{ textAlign: "center", padding: 48, color: "var(--color-text-muted)" }}>
+        <p style={{ marginBottom: 6, color: "var(--color-text)", fontWeight: 700 }}>
+          Todavía no armaste dos escenarios financieros{actual ? ` para ${nombreAnalisis(actual)}` : ""}.
+        </p>
+        <p style={{ marginBottom: 16, fontSize: 13 }}>
+          En el simulador cargá el escenario A, tocá “+ Comparar con B” y cambiá lo que quieras probar:
+          alquiler, inversión, precio o ventas.
+        </p>
+        <button onClick={() => navigate("/simulador")} style={{
+          background: "var(--color-primary)", color: "var(--color-on-primary)",
+          border: "none", borderRadius: 8, padding: "10px 20px",
+          fontSize: 14, fontWeight: 700, cursor: "pointer"
+        }}>Ir al simulador</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: "0 24px 24px", maxWidth: 1000, margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+        <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+          {actual ? `Análisis: ${nombreAnalisis(actual)}` : "Sin análisis de zona asociado"}
+        </p>
+        <button onClick={() => navigate("/simulador")} style={{
+          background: "transparent", border: "1px solid var(--color-border)", borderRadius: 8,
+          padding: "8px 16px", fontSize: 13, color: "var(--color-text)", cursor: "pointer"
+        }}>Editar en el simulador</button>
+      </div>
+      <ComparacionEscenarios A={guardados.A} B={guardados.B} />
+    </div>
+  )
+}
+
+export default function Comparador() {
+  const [vista, setVista] = useState("zonas")
+  const tab = (id, label) => (
+    <button type="button" onClick={() => setVista(id)} style={{
+      padding: "10px 18px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer",
+      border: "1px solid var(--color-border)",
+      background: vista === id ? "var(--color-primary)" : "var(--color-surface)",
+      color: vista === id ? "var(--color-on-primary)" : "var(--color-text)",
+    }}>{label}</button>
+  )
+  return (
+    <div className="page-enter" style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)" }}>
+      <div style={{ display: "flex", gap: 8, padding: "24px 24px 16px", flexWrap: "wrap" }}>
+        {tab("zonas", "Zonas")}
+        {tab("escenarios", "Escenarios financieros")}
+      </div>
+      {vista === "zonas" ? <ComparadorZonas /> : <ComparadorEscenarios />}
     </div>
   )
 }

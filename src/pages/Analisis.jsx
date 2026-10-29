@@ -43,6 +43,7 @@ export default function Analisis() {
       return
     }
     setLoading(true)
+    const negocio = businesses.find(b => String(b.id) === String(selectedBusiness))
     // El pedido real se hace en /loading, que espera la respuesta y muestra errores
     navigate("/loading", {
       state: {
@@ -50,6 +51,8 @@ export default function Analisis() {
         lng: position.lng,
         radius,
         businessId: Number(selectedBusiness),
+        businessName: negocio?.name,
+        businessCategory: negocio?.category,
       },
     })
   }
@@ -75,9 +78,9 @@ export default function Analisis() {
   }
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 56px)", overflow: "hidden", position: "relative" }}>
+    <div className="layout-split" style={{ display: "flex", height: "calc(100vh - 56px)", overflow: "hidden", position: "relative" }}>
       {/* Panel izquierdo */}
-      <div style={panelStyle}>
+      <div className="panel-lateral" style={panelStyle}>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--color-text)", marginBottom: 4 }}>
             Configurá tu análisis
@@ -167,7 +170,7 @@ export default function Analisis() {
       </div>
 
       {/* Mapa */}
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+      <div className="panel-mapa" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {position && (
           <div style={{
             position: "absolute", top: 16, left: 16, zIndex: 1000,
