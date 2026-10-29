@@ -248,7 +248,7 @@ export default function Resultados() {
             alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div style={{ flex: "1 1 100%" }}>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
-                Rubros recomendados
+                Otros rubros recomendados para la zona
               </h4>
               {scoresZona && (
                 <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10,
@@ -271,7 +271,7 @@ export default function Resultados() {
                   </div>
                 </div>
               )}
-              <Recomendaciones analysisId={data.id} alternativas={alternativas} />
+              <Recomendaciones analysisId={data.id} alternativas={alternativas} excluir={businessName} />
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 12 }}>
                 Basado en demanda, competencia y poder adquisitivo de la zona.
               </p>

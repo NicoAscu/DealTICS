@@ -109,7 +109,7 @@ export function TendenciaConsumo({ categoria }) {
 }
 
 // Rubros recomendados para la zona (módulo de recomendaciones del back + alternativas del motor)
-export function Recomendaciones({ analysisId, alternativas = [] }) {
+export function Recomendaciones({ analysisId, alternativas = [], excluir }) {
   const [recs, setRecs] = useState(null)
 
   useEffect(() => {
@@ -122,7 +122,7 @@ export function Recomendaciones({ analysisId, alternativas = [] }) {
   // Primero las alternativas que calculó el motor para el rubro elegido, después las de la zona
   const vistos = new Set()
   const lista = [...alternativas, ...(recs ?? [])]
-    .filter((r) => r?.nombre && !vistos.has(r.nombre) && vistos.add(r.nombre))
+    .filter((r) => r?.nombre && r.nombre !== excluir && !vistos.has(r.nombre) && vistos.add(r.nombre))
     .slice(0, 5)
 
   return (
