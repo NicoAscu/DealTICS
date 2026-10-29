@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import api from "../services/api"
+import api, { mensajeError } from "../services/api"
 
 export default function Registro() {
   const navigate = useNavigate()
@@ -18,14 +18,14 @@ export default function Registro() {
     setLoading(true)
     setError("")
     try {
-      const res = await api.post("/users/register", { name: nombre, email, password })
+      await api.post("/users/register", { name: nombre, email, password })
       // Registro exitoso, redirigir al login
       navigate("/login")
     } catch (e) {
       if (e.response?.status === 409) {
         setError("El email ya está registrado.")
       } else {
-        setError("No se pudo crear la cuenta. Intentá de nuevo.")
+        setError(mensajeError(e, "No se pudo crear la cuenta. Intentá de nuevo."))
       }
     } finally {
       setLoading(false)

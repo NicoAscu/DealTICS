@@ -1,16 +1,12 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { leerAnalisisActual } from "../services/analisis"
 
 export default function Reportes() {
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
+  const [data] = useState(() => leerAnalisisActual())
 
-  useEffect(() => {
-    const saved = localStorage.getItem("analysisResult")
-    if (saved) setData(JSON.parse(saved))
-  }, [])
-
-  const motor = data?.motorAnalisis?.motorAnalisis
+  const motor = data?.motor
   const score = parseFloat(data?.opportunity_index ?? 0).toFixed(0)
   const risk = data?.risk_level || "—"
   const riskLabel = { low: "Bajo", medium: "Medio", high: "Alto" }[risk] || "—"
@@ -45,7 +41,7 @@ export default function Reportes() {
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)",
               letterSpacing: 1, marginBottom: 4 }}>REPORTE DE ANÁLISIS</div>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)" }}>
-              {motor?.rubro?.nombre || "Negocio"} · {motor?.zona?.descripcionZona || "Zona analizada"}
+              {motor?.rubro?.nombre || data?.business_name || "Negocio"} · {data?._neighborhood || motor?.zona?.descripcionZona || "Zona analizada"}
             </h2>
             <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginTop: 4 }}>
               Generado el {new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}
@@ -104,7 +100,7 @@ export default function Reportes() {
             {[
               { label: "Poder adquisitivo", value: motor?.zona?.nivelPoder || data?.avg_income_level || "—" },
               { label: "Flujo de personas", value: data?.pedestrian_flow === "high" ? "Alto" : data?.pedestrian_flow === "medium" ? "Medio" : "Bajo" },
-              { label: "Densidad poblacional", value: data?.population_density ? `${data.population_density.toLocaleString()} hab/km²` : "—" },
+              { label: "Densidad poblacional", value: data?.population_density ? `${Number(data.population_density).toLocaleString("es-AR")} hab/km²` : "—" },
               { label: "Score de transporte", value: data?.transit_score ?? "—" },
             ].map(item => (
               <div key={item.label} style={{ padding: "14px 16px", borderRadius: 10,

@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import logoLight from "../assets/dealtics-navbar-light.svg"
 import logoDark from "../assets/dealtics-navbar-dark.svg"
+import { getUser, clearSession } from "../services/api"
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -15,12 +16,17 @@ export default function Navbar() {
   }, [dark])
 
   useEffect(() => {
-    const saved = localStorage.getItem("user")
-    if (saved) setUser(JSON.parse(saved))
+    setUser(getUser())
   }, [pathname])
 
+  useEffect(() => {
+    const onChange = () => setUser(getUser())
+    window.addEventListener("auth-change", onChange)
+    return () => window.removeEventListener("auth-change", onChange)
+  }, [])
+
   const logout = () => {
-    localStorage.removeItem("user")
+    clearSession()
     setUser(null)
     navigate("/")
     setShowMenu(false)

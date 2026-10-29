@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { MapContainer, TileLayer, useMapEvents, Marker, Circle } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
-import api from "../services/api"
+import api, { isLoggedIn, mensajeError } from "../services/api"
 import L from "leaflet"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
@@ -26,49 +26,32 @@ export default function Analisis() {
   const [selectedBusiness, setSelectedBusiness] = useState("")
   const [inversion, setInversion] = useState("")
   const [loading, setLoading] = useState(false)
+  const [errorRubros, setErrorRubros] = useState("")
 
   useEffect(() => {
+    // Sin datos inventados: si falla, mostramos el error (IDs falsos darían 404 en el back)
     api.get("/businesses")
       .then(r => setBusinesses(r.data))
-      .catch(() => setBusinesses([
-        { id: 1, name: "Panadería", category: "Gastronomía" },
-        { id: 2, name: "Kiosco", category: "Retail" },
-        { id: 3, name: "Cafetería", category: "Gastronomía" },
-      ]))
+      .catch(e => setErrorRubros(mensajeError(e, "No se pudieron cargar los rubros.")))
   }, [])
 
-  const handleAnalizar = async () => {
+  const handleAnalizar = () => {
     if (!position || !selectedBusiness) return
-    setLoading(true)
-    try {
-      // 1. Guardar ubicación
-      const locRes = await api.post("/locations", {
-        user_id: JSON.parse(localStorage.getItem("user") || "{}")?.id || 1,
-        latitude: position.lat,
-        longitude: position.lng,
-        radius_m: radius,
-      })
-      const locationId = locRes.data.id
-
-      // 2. Crear análisis
-      const anaRes = await api.post("/analyses", {
-        user_id: JSON.parse(localStorage.getItem("user") || "{}")?.id || 1,
-        location_id: locationId,
-        business_id: parseInt(selectedBusiness),
-      })
-
-      // 3. Guardar resultado completo en localStorage
-      localStorage.setItem("analysisResult", JSON.stringify({
-        ...anaRes.data,
-        _mapPosition: { lat: position.lat, lng: position.lng },
-        _radius: radius,
-      }))
-      navigate("/loading")
-    } catch (e) {
-      console.error("Error en análisis:", e)
-      // Si falla el backend igual navegamos para mostrar datos mock
-      navigate("/loading")
+    // El back exige estar logueado para guardar ubicaciones y análisis
+    if (!isLoggedIn()) {
+      navigate("/login?next=/analisis")
+      return
     }
+    setLoading(true)
+    // El pedido real se hace en /loading, que espera la respuesta y muestra errores
+    navigate("/loading", {
+      state: {
+        lat: position.lat,
+        lng: position.lng,
+        radius,
+        businessId: Number(selectedBusiness),
+      },
+    })
   }
 
   const panelStyle = {
@@ -138,6 +121,9 @@ export default function Analisis() {
               <option key={b.id} value={b.id}>{b.name} · {b.category}</option>
             ))}
           </select>
+          {errorRubros && (
+            <p style={{ fontSize: 12, color: "#dc2626", marginTop: 6 }}>{errorRubros}</p>
+          )}
         </div>
 
         <div>
