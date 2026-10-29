@@ -2,10 +2,12 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { formatear } from "../services/finanzas"
 
 const viabilidadConfig = {
-  riesgo_bajo:  { label: "Riesgo bajo",  color: "#22c55e", bg: "#dcfce7" },
-  riesgo_medio: { label: "Riesgo medio", color: "#f59e0b", bg: "#fef3c7" },
-  riesgo_alto:  { label: "Riesgo alto",  color: "#ef4444", bg: "#fee2e2" },
+  riesgo_bajo:  { label: "Viabilidad financiera alta",  color: "#16a34a", bg: "#dcfce7" },
+  riesgo_medio: { label: "Viabilidad financiera media", color: "#b45309", bg: "#fef3c7" },
+  riesgo_alto:  { label: "Viabilidad financiera baja",  color: "#dc2626", bg: "#fee2e2" },
 }
+
+const fmtEje = (v) => (Math.abs(v) >= 1e6 ? `${Math.round(v / 1e5) / 10}M` : Math.abs(v) >= 1e3 ? `${Math.round(v / 1e3)}k` : v)
 
 function MetricCard({ label, value, sub, positive }) {
   return (
@@ -94,7 +96,7 @@ export default function SimuladorDashboard({ metricas }) {
           <BarChart data={comparativa}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={12} />
-            <YAxis stroke="var(--color-text-muted)" fontSize={12} />
+            <YAxis stroke="var(--color-text-muted)" fontSize={12} tickFormatter={fmtEje} />
             <Tooltip formatter={(v) => fmt(v)}
               contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
             <ReferenceLine y={0} stroke="var(--color-text-muted)" />
@@ -113,7 +115,7 @@ export default function SimuladorDashboard({ metricas }) {
           <LineChart data={proyeccion}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="mes" stroke="var(--color-text-muted)" fontSize={12} interval={3} />
-            <YAxis stroke="var(--color-text-muted)" fontSize={12} />
+            <YAxis stroke="var(--color-text-muted)" fontSize={12} tickFormatter={fmtEje} />
             <Tooltip formatter={(v) => fmt(v)}
               contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
             <ReferenceLine y={0} stroke="var(--color-text-muted)" />

@@ -40,7 +40,7 @@ export function escenarioPorDefecto() {
     renovacion: 1500000, mobiliario: 1000000, equipamiento: 1200000,
     software: 150000, marketing: 300000, stock: 350000,
     alquiler: 350000, salarios: 800000, servicios: 120000, proveedores: 0, otros: 0,
-    precioPromedio: 3500, ventasMensuales: 900, margen: 35,
+    precioPromedio: 3500, ventasMensuales: 1200, margen: 35,
   }
 }
 
