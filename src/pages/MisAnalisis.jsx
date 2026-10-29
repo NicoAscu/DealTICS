@@ -1,43 +1,36 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import api from "../services/api"
 import RiskBadge from "../components/RiskBadge"
+import { getUser, mensajeError } from "../services/api"
+import {
+  listarHistorial, cargarAnalisis, guardarAnalisisActual, nombreAnalisis,
+} from "../services/analisis"
 
 export default function MisAnalisis() {
   const navigate = useNavigate()
   const [analisis, setAnalisis] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [abriendo, setAbriendo] = useState(null)
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) { navigate("/login"); return }
+    const user = getUser()
+    if (!user?.id) { navigate("/login?next=/mis-analisis"); return }
 
-    const user = JSON.parse(userData)
-    api.get(`/analyses/user/${user.id}`)
-      .then(r => setAnalisis(r.data))
-      .catch(() => setAnalisis([]))
+    listarHistorial(user.id)
+      .then(setAnalisis)
+      .catch(e => setError(mensajeError(e, "No se pudo cargar el historial.")))
       .finally(() => setLoading(false))
   }, [])
 
   const handleAbrir = async (a) => {
+    setAbriendo(a.id)
     try {
-      // Buscar la ubicación real del análisis
-      const locRes = await api.get(`/locations/${a.location_id}`)
-      const loc = locRes.data
-
-      // Buscar el análisis completo con motorAnalisis
-      const anaRes = await api.get(`/analyses/${a.id}`)
-      const anaCompleto = anaRes.data
-
-      const saved = {
-        ...anaCompleto,
-        _mapPosition: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
-        _radius: loc.radius_m || 500,
-      }
-      localStorage.setItem("analysisResult", JSON.stringify(saved))
-    } catch (e) {
-      // Si falla, guardar lo que tenemos sin mapa
-      localStorage.setItem("analysisResult", JSON.stringify(a))
+      // GET /analyses/:id trae location_id; con eso buscamos la ubicación para el mapa
+      guardarAnalisisActual(await cargarAnalisis(a.id))
+    } catch {
+      // Igual tenemos los datos del historial (incluye motor_analisis), sin mapa
+      guardarAnalisisActual(a)
     }
     navigate("/resultados")
   }
@@ -47,12 +40,6 @@ export default function MisAnalisis() {
     return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })
   }
 
-  const getNombre = (a) => {
-    const motor = a?.motorAnalisis?.motorAnalisis
-    const rubro = motor?.rubro?.nombre || "Análisis"
-    const zona = motor?.zona?.descripcionZona || `#${a.id}`
-    return `${rubro} · ${zona}`
-  }
 
   return (
     <div className="page-enter" style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)", padding: 32 }}>
@@ -76,6 +63,8 @@ export default function MisAnalisis() {
 
         {loading ? (
           <p style={{ color: "var(--color-text-muted)", textAlign: "center" }}>Cargando...</p>
+        ) : error ? (
+          <p style={{ color: "#dc2626", textAlign: "center" }}>{error}</p>
         ) : analisis.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60 }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
@@ -101,10 +90,10 @@ export default function MisAnalisis() {
                   </div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)" }}>
-                      {getNombre(a)}
+                      {nombreAnalisis(a)}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
-                      Radio {a.radius_m || "—"}m · {formatFecha(a.created_at)}
+                      {a.radius_m ? `Radio ${a.radius_m}m · ` : ""}{formatFecha(a.created_at)}{abriendo === a.id ? " · abriendo..." : ""}
                     </div>
                   </div>
                 </div>

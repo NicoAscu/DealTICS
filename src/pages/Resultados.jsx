@@ -1,97 +1,83 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import RiskBadge from "../components/RiskBadge"
-import api from "../services/api"
 import { MapContainer, TileLayer, Marker, Circle } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
+import {
+  leerAnalisisActual, guardarAnalisisActual, cargarAnalisis,
+  competidoresPorDistancia, porcentaje,
+} from "../services/analisis"
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, shadowUrl: markerShadow })
 
-const rubrosRecomendadosFallback = ["Cafetería de especialidad", "Brunch", "Panadería boutique", "Heladería"]
-
-const competidores = [
-  { label: "Café", value: 80 },
-  { label: "Resto", value: 65 },
-  { label: "Kiosco", value: 50 },
-  { label: "Retail", value: 40 },
-  { label: "Otros", value: 30 },
-]
+const pct = (v) => (v == null ? null : Math.round(v * 100))
 
 export default function Resultados() {
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
-  const [analisisRubro, setAnalisisRubro] = useState(null)
-  const [alternativas, setAlternativas] = useState([])
-  const [scoresZona, setScoresZona] = useState(null)
-  const [competidoresReales, setCompetidoresReales] = useState([])
-  const [mapPosition, setMapPosition] = useState(null)
-  const [mapRadius, setMapRadius] = useState(500)
+  const [data, setData] = useState(() => leerAnalisisActual())
+  const [competencia, setCompetencia] = useState(null)
 
+  // Si el análisis guardado no tiene datos del motor (localStorage viejo), lo pedimos de nuevo
   useEffect(() => {
-    const saved = localStorage.getItem("analysisResult")
-    if (!saved) return
+    if (!data?.id || data.motor) return
+    cargarAnalisis(data.id)
+      .then(completo => {
+        const merged = { ...completo, _mapPosition: completo._mapPosition ?? data._mapPosition }
+        guardarAnalisisActual(merged)
+        setData(merged)
+      })
+      .catch(() => {})
+  }, [data?.id])
 
-    const parsed = JSON.parse(saved)
+  // Competidores reales guardados por el back
+  useEffect(() => {
+    if (!data?.id) return
+    competidoresPorDistancia(data.id, data._radius)
+      .then(setCompetencia)
+      .catch(() => setCompetencia(null))
+  }, [data?.id])
 
-    // Guardar posición del mapa inmediatamente
-    if (parsed?._mapPosition) setMapPosition(parsed._mapPosition)
-    if (parsed?._radius) setMapRadius(parsed._radius)
+  if (!data) {
+    return (
+      <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 16, background: "var(--color-bg)" }}>
+        <p style={{ color: "var(--color-text-muted)" }}>Todavía no hiciste ningún análisis.</p>
+        <button onClick={() => navigate("/analisis")} style={{
+          background: "var(--color-primary)", color: "var(--color-on-primary)", border: "none",
+          borderRadius: 10, padding: "12px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer"
+        }}>Hacer un análisis</button>
+      </div>
+    )
+  }
 
-    // Si el análisis guardado tiene motorAnalisis completo, usarlo
-    if (parsed?.motorAnalisis?.motorAnalisis) {
-      setData(parsed)
-      const motor = parsed.motorAnalisis.motorAnalisis
-      if (motor.rubro) setAnalisisRubro(motor.rubro)
-      if (motor.alternativas) setAlternativas(motor.alternativas)
-      if (motor.zona) setScoresZona(motor.zona)
-      return
-    }
+  const motor = data.motor
+  const mapPosition = data._mapPosition
+  const mapRadius = data._radius
+  const analisisRubro = motor?.rubro
+  const alternativas = motor?.alternativas ?? []
+  const scoresZona = motor?.zona
+  const score = Math.round(parseFloat(data.opportunity_index ?? 0))
+  const risk = data.risk_level || "medium"
+  const neighborhood = data._neighborhood || motor?.zona?.descripcionZona || "Zona analizada"
+  const businessName = analisisRubro?.nombre || data.business_name || "Negocio"
+  const descripcion = scoresZona?.descripcionZona
+    || (score >= 70 ? "La zona muestra buenas condiciones para este rubro."
+      : score >= 50 ? "La zona tiene condiciones intermedias para este rubro."
+      : "La zona presenta condiciones desfavorables para este rubro.")
 
-    // Si no tiene motorAnalisis, buscarlo del backend
-    if (parsed?.id) {
-      api.get(`/analyses/${parsed.id}`)
-        .then(r => {
-          const completo = {
-            ...r.data,
-            _mapPosition: parsed._mapPosition,
-            _radius: parsed._radius,
-          }
-          setData(completo)
-          localStorage.setItem("analysisResult", JSON.stringify(completo))
-
-          const motor = completo?.motorAnalisis?.motorAnalisis
-          if (motor) {
-            if (motor.rubro) setAnalisisRubro(motor.rubro)
-            if (motor.alternativas) setAlternativas(motor.alternativas)
-            if (motor.zona) setScoresZona(motor.zona)
-          }
-        })
-        .catch(() => {
-          // Si falla el backend, usar lo que hay
-          setData(parsed)
-        })
-    } else {
-      setData(parsed)
-    }
-  }, [])
-
-  const score = parseFloat(data?.opportunity_index ?? 0)
-  const risk = data?.risk_level || "medium"
-  const motor = data?.motorAnalisis?.motorAnalisis
-  const neighborhood = data?.neighborhood || motor?.zona?.descripcionZona || "Zona analizada"
-  const businessName = motor?.rubro?.nombre || data?.business_name || "Negocio"
-
+  // Todos los indicadores en % de su máximo. null = sin dato (no inventamos 50%)
   const indicadores = [
-    { label: "Demanda potencial", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0.5) * 100) },
-    { label: "Poder adquisitivo", value: Math.round((motor?.zona?.poderAdquisitivoScore ?? 0.5) * 100) },
-    { label: "Competencia", value: data?.breakdown?.competition?.score ?? 0 },
-    { label: "Accesibilidad", value: data?.breakdown?.transport?.score ?? 0 },
-    { label: "Tráfico peatonal", value: data?.breakdown?.flujo?.score ?? 0 },
+    { label: "Demanda potencial", value: pct(scoresZona?.demandaPotencialScore) },
+    { label: "Poder adquisitivo", value: pct(scoresZona?.poderAdquisitivoScore) },
+    { label: "Baja competencia", value: porcentaje(data.breakdown, "competition") },
+    { label: "Accesibilidad", value: porcentaje(data.breakdown, "transport") },
+    { label: "Tráfico peatonal", value: porcentaje(data.breakdown, "flujo") },
   ]
+  const maxGrupo = Math.max(1, ...(competencia?.grupos ?? []).map(g => g.value))
 
   return (
     <div className="page-enter" style={{ display: "flex", height: "calc(100vh - 56px)", background: "var(--color-bg)", overflow: "hidden" }}>
@@ -181,11 +167,11 @@ export default function Resultados() {
                 <RiskBadge level={risk} size="md" />
               </div>
               <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 16 }}>
-                La zona muestra demanda sólida y competencia moderada para un negocio de ticket medio.
+                {descripcion}
               </p>
               <div style={{ display: "flex", gap: 24 }}>
               {[
-                  { label: "DEMANDA", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0) * 100) + "%" },
+                  { label: "DEMANDA", value: scoresZona ? pct(scoresZona.demandaPotencialScore) + "%" : "s/d" },
                   { label: "COMPETENCIA", value: data?.competitor_count ?? 0 },
                   { label: "PROB. ÉXITO", value: parseFloat(data?.success_probability ?? 0).toFixed(0) + "%" },
                 ].map(m => (
@@ -211,11 +197,11 @@ export default function Resultados() {
                   <div style={{ display: "flex", justifyContent: "space-between",
                     fontSize: 13, color: "var(--color-text)", marginBottom: 4 }}>
                     <span>{ind.label}</span>
-                    <span style={{ fontWeight: 700 }}>{ind.value}%</span>
+                    <span style={{ fontWeight: 700 }}>{ind.value == null ? "s/d" : `${ind.value}%`}</span>
                   </div>
                   <div style={{ height: 4, background: "var(--color-border)", borderRadius: 2 }}>
                     <div style={{ height: "100%", borderRadius: 2, background: "var(--color-primary)",
-                      width: `${ind.value}%` }} />
+                      width: `${ind.value ?? 0}%` }} />
                   </div>
                 </div>
               ))}
@@ -223,24 +209,33 @@ export default function Resultados() {
 
             <div style={{ padding: 24 }}>
               <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 4 }}>
-                Competidores por rubro
+                Competidores por distancia
               </h4>
               <p style={{ fontSize: 12, color: "var(--color-accent)", marginBottom: 16 }}>
-                En un radio de 500 m
+                {competencia
+                  ? `${competencia.total} en un radio de ${mapRadius} m${competencia.ratingPromedio ? ` · rating prom. ${competencia.ratingPromedio}★` : ""}`
+                  : `En un radio de ${mapRadius} m`}
               </p>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 100 }}>
-                {competidores.map((c, i) => (
-                  <div key={c.label} style={{ flex: 1, display: "flex",
-                    flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <div style={{
-                      width: "100%", borderRadius: "4px 4px 0 0",
-                      background: i === 0 ? "var(--color-primary)" : "var(--color-border)",
-                      height: `${c.value}%`
-                    }} />
-                    <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{c.label}</span>
-                  </div>
-                ))}
-              </div>
+              {competencia?.total ? (
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 100 }}>
+                  {competencia.grupos.map((c, i) => (
+                    <div key={c.label} style={{ flex: 1, height: "100%", display: "flex",
+                      flexDirection: "column", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 10, color: "var(--color-text)" }}>{c.value || ""}</span>
+                      <div style={{
+                        width: "100%", borderRadius: "4px 4px 0 0",
+                        background: i === 0 ? "var(--color-primary)" : "var(--color-border)",
+                        height: `${(c.value / maxGrupo) * 70}%`, minHeight: c.value ? 4 : 0
+                      }} />
+                      <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{c.label}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+                  {competencia ? "No se encontraron competidores en el radio." : "Cargando competidores..."}
+                </p>
+              )}
             </div>
           </div>
 
@@ -273,7 +268,12 @@ export default function Resultados() {
                 </div>
               )}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {(alternativas.length > 0 ? alternativas.map(a => a.nombre) : rubrosRecomendadosFallback).map((r, i) => (
+                {alternativas.length === 0 && (
+                  <span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+                    Sin recomendaciones del motor para este análisis.
+                  </span>
+                )}
+                {alternativas.map(a => a.nombre).map((r, i) => (
                   <span key={r} style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
                     background: i === 0 ? "var(--color-primary)" : "transparent",

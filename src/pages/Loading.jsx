@@ -1,31 +1,93 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useRef, useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
+import { crearAnalisis, guardarAnalisisActual } from "../services/analisis"
+import { mensajeError } from "../services/api"
 
 const steps = [
-  { label: "Google Places", detail: "142 locales en el radio", step: "01 Ubicación" },
-  { label: "Censo demográfico 2022", detail: "1.240 hab/km²", step: "02 Recolección" },
-  { label: "Google Trends", detail: "demanda de búsqueda", step: "03 Análisis" },
-  { label: "Movilidad urbana", detail: "flujo peatonal estimado", step: "04 Resultados" },
+  { label: "Ubicación y dirección", step: "01 Ubicación" },
+  { label: "Competencia (Google Places)", step: "02 Recolección" },
+  { label: "Censo y poder adquisitivo", step: "03 Análisis" },
+  { label: "Índice de oportunidad y riesgo", step: "04 Resultados" },
 ]
+
+function detallesDe(r) {
+  if (!r) return []
+  return [
+    r._neighborhood || r._address || "Ubicación guardada",
+    `${r.competitor_count ?? 0} competidores en el radio`,
+    r.motor?.zona ? `Poder ${r.motor.zona.nivelPoder} · demanda ${r.motor.zona.nivelDemanda}` : "Sin datos del censo",
+    `Índice ${Math.round(Number(r.opportunity_index ?? 0))}/100`,
+  ]
+}
 
 export default function Loading() {
   const navigate = useNavigate()
+  const { state } = useLocation()
   const [progress, setProgress] = useState(0)
-  const [currentStep, setCurrentStep] = useState(0)
+  const [resultado, setResultado] = useState(null)
+  const [error, setError] = useState("")
+  const [intento, setIntento] = useState(0)
+  const enCurso = useRef(false)
 
+  // Pedido real al backend. useRef evita que StrictMode lo dispare dos veces.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { clearInterval(interval); navigate("/resultados"); return 100 }
-        return p + 2
+    if (!state?.lat || !state?.businessId) { navigate("/analisis", { replace: true }); return }
+    if (enCurso.current) return
+    enCurso.current = true
+    setError("")
+    setProgress(0)
+
+    crearAnalisis(state)
+      .then(r => {
+        guardarAnalisisActual(r)
+        setResultado(r)
+        setProgress(100)
+        setTimeout(() => navigate("/resultados", { replace: true }), 900)
       })
-    }, 60)
-    return () => clearInterval(interval)
-  }, [])
+      .catch(e => {
+        console.error("Error en análisis:", e)
+        setError(mensajeError(e, "No se pudo completar el análisis."))
+      })
+      .finally(() => { enCurso.current = false })
+  }, [intento])
 
+  // Barra de progreso: avanza sola hasta 90% mientras esperamos la respuesta
   useEffect(() => {
-    setCurrentStep(Math.floor(progress / 25))
-  }, [progress])
+    if (resultado || error) return
+    const interval = setInterval(() => {
+      setProgress(p => (p >= 90 ? p : p + Math.max(0.3, (90 - p) / 40)))
+    }, 200)
+    return () => clearInterval(interval)
+  }, [resultado, error])
+
+  const currentStep = resultado ? steps.length : Math.min(steps.length - 1, Math.floor(progress / 25))
+  const detalles = detallesDe(resultado)
+  const pct = Math.round(progress)
+
+  if (error) {
+    return (
+      <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", padding: 40, textAlign: "center" }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--color-text)", marginBottom: 8 }}>
+          No pudimos completar el análisis
+        </h2>
+        <p style={{ fontSize: 14, color: "var(--color-text-muted)", maxWidth: 480, marginBottom: 24 }}>
+          {error}
+        </p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => navigate("/analisis")} style={{
+            background: "transparent", border: "1px solid var(--color-border)", borderRadius: 10,
+            padding: "12px 20px", fontSize: 14, color: "var(--color-text)", cursor: "pointer"
+          }}>← Volver</button>
+          <button onClick={() => setIntento(i => i + 1)} style={{
+            background: "var(--color-primary)", color: "var(--color-on-primary)", border: "none",
+            borderRadius: 10, padding: "12px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer"
+          }}>Reintentar</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: "calc(100vh - 56px)", background: "var(--color-bg)",
@@ -54,7 +116,8 @@ export default function Loading() {
         Analizando la zona...
       </h2>
       <p style={{ fontSize: 15, color: "var(--color-text-muted)", marginBottom: 32, textAlign: "center" }}>
-        Cruzando datos demográficos, económicos y de competencia en un radio de 500 m.
+        Cruzando datos demográficos, económicos y de competencia en un radio de {state?.radius ?? 500} m.
+        {pct < 90 ? "" : " Puede tardar hasta un minuto si el servidor estaba inactivo."}
       </p>
 
       {/* Barra de progreso */}
@@ -62,11 +125,11 @@ export default function Loading() {
         <div style={{ display: "flex", justifyContent: "space-between",
           fontSize: 13, color: "var(--color-text-muted)", marginBottom: 8 }}>
           <span>Recolectando datos</span>
-          <span>{progress}%</span>
+          <span>{pct}%</span>
         </div>
         <div style={{ height: 6, background: "var(--color-border)", borderRadius: 4 }}>
           <div style={{ height: "100%", borderRadius: 4,
-            background: "var(--color-primary)", width: `${progress}%`, transition: "width 0.1s" }} />
+            background: "var(--color-primary)", width: `${pct}%`, transition: "width 0.3s" }} />
         </div>
       </div>
 
@@ -121,7 +184,7 @@ export default function Loading() {
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{s.label}</span>
             </div>
             <span style={{ fontSize: 13, color: i < currentStep ? "var(--color-accent)" : "var(--color-text-muted)" }}>
-              {i < currentStep ? s.detail : "—"}
+              {i < currentStep ? (detalles[i] || "✓") : "—"}
             </span>
           </div>
         ))}

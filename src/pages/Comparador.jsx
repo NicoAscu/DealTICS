@@ -5,7 +5,10 @@ import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
-import api from "../services/api"
+import { getUser } from "../services/api"
+import {
+  leerAnalisisActual, listarHistorial, cargarAnalisis, porcentaje,
+} from "../services/analisis"
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, shadowUrl: markerShadow })
@@ -47,17 +50,13 @@ function TarjetaEscenario({ analisis, label, recomendado, onSelect, selected }) 
     </div>
   )
 
-  const motor = analisis?.motorAnalisis?.motorAnalisis
-  const indicadores = motor ? [
-    { label: "Demanda potencial", value: Math.round((motor?.zona?.demandaPotencialScore ?? 0) * 100) },
-    { label: "Poder adquisitivo", value: Math.round((motor?.zona?.poderAdquisitivoScore ?? 0) * 100) },
-    { label: "Competencia", value: analisis?.breakdown?.competition?.score ?? 0 },
-    { label: "Accesibilidad", value: analisis?.breakdown?.transport?.score ?? 0 },
-  ] : [
-    { label: "Índice oportunidad", value: parseFloat(analisis?.opportunity_index ?? 0).toFixed(0) },
-    { label: "Competidores", value: analisis?.competitor_count ?? 0 },
-    { label: "Score transporte", value: analisis?.transit_score ?? 0 },
-    { label: "Flujo peatonal", value: analisis?.pedestrian_flow === "high" ? 80 : analisis?.pedestrian_flow === "medium" ? 50 : 20 },
+  const motor = analisis?.motor
+  const pctZona = (v) => (v == null ? 0 : Math.round(v * 100))
+  const indicadores = [
+    { label: "Demanda potencial", value: pctZona(motor?.zona?.demandaPotencialScore) },
+    { label: "Poder adquisitivo", value: pctZona(motor?.zona?.poderAdquisitivoScore) },
+    { label: "Baja competencia", value: porcentaje(analisis?.breakdown, "competition") ?? 0 },
+    { label: "Accesibilidad", value: porcentaje(analisis?.breakdown, "transport") ?? 0 },
   ]
 
   const position = analisis?._mapPosition
@@ -129,7 +128,7 @@ function TarjetaEscenario({ analisis, label, recomendado, onSelect, selected }) 
   )
 }
 function getNombre(a) {
-  const motor = a?.motorAnalisis?.motorAnalisis
+  const motor = a?.motor
   if (motor?.rubro?.nombre) return `${motor.rubro.nombre} · #${a.id}`
   return `Análisis #${a.id} · ${new Date(a.created_at).toLocaleDateString("es-AR")}`
 }
@@ -143,15 +142,14 @@ export default function Comparador() {
 
   useEffect(() => {
     // Cargar el último análisis como escenario A por defecto
-    const saved = localStorage.getItem("analysisResult")
-    if (saved) setEscenarioA(JSON.parse(saved))
+    const actual = leerAnalisisActual()
+    if (actual) setEscenarioA(actual)
 
     // Cargar historial del usuario
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      const user = JSON.parse(userData)
-      api.get(`/analyses/user/${user.id}`)
-        .then(r => setHistorial(r.data))
+    const user = getUser()
+    if (user?.id) {
+      listarHistorial(user.id)
+        .then(setHistorial)
         .catch(() => {})
         .finally(() => setLoadingHistorial(false))
     } else {
@@ -164,24 +162,14 @@ export default function Comparador() {
   const diff = scoreA - scoreB
 
   const handleSeleccionar = async (a) => {
+    let elegido = a
     try {
-      const locRes = await api.get(`/locations/${a.location_id}`)
-      const loc = locRes.data
-      const anaRes = await api.get(`/analyses/${a.id}`)
-      const anaCompleto = anaRes.data
-
-      const enriquecido = {
-        ...anaCompleto,
-        _mapPosition: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
-        _radius: loc.radius_m || 500,
-      }
-
-      if (seleccionando === "A") setEscenarioA(enriquecido)
-      if (seleccionando === "B") setEscenarioB(enriquecido)
-    } catch (e) {
-      if (seleccionando === "A") setEscenarioA(a)
-      if (seleccionando === "B") setEscenarioB(a)
+      elegido = await cargarAnalisis(a.id)
+    } catch {
+      // Sin ubicación: usamos lo que vino en el historial
     }
+    if (seleccionando === "A") setEscenarioA(elegido)
+    if (seleccionando === "B") setEscenarioB(elegido)
     setSeleccionando(null)
   }
 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import api from "../services/api"
+import api, { mensajeError } from "../services/api"
+import { leerAnalisisActual } from "../services/analisis"
 import SimuladorDashboard from "../components/SimuladorDashboard"
 
 function calcularMetricas({ alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen }) {
@@ -65,22 +66,42 @@ export default function Simulador() {
     alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen
   }), [alquiler, salarios, servicios, inversionInicial, precioPromedio, ventasMensuales, margen])
 
+  const [guardado, setGuardado] = useState(null) // { ok: bool, texto }
+  const [guardando, setGuardando] = useState(false)
+
   const handleGuardar = async () => {
-    const analysisId = JSON.parse(localStorage.getItem("analysisResult") || "{}")?.id || 1
+    // Sin "|| 1": guardar en el análisis de otra persona era peor que no guardar
+    const analysisId = leerAnalisisActual()?.id
+    if (!analysisId) {
+      setGuardado({ ok: false, texto: "Primero hacé un análisis de zona para asociarle el escenario." })
+      return
+    }
+    setGuardando(true)
+    setGuardado(null)
+    const costos = {
+      // El simulador pide la inversión inicial como un único total
+      renovation_cost: 0,
+      furniture_cost: 0,
+      equipment_cost: inversionInicial,
+      software_cost: 0,
+      marketing_initial: 0,
+      initial_stock: 0,
+      monthly_salaries: salarios,
+      monthly_services: servicios,
+      monthly_suppliers: 0,
+    }
     try {
-      await api.post("/cost-estimations", {
-        analysis_id: analysisId,
-        renovation_cost: 0,
-        furniture_cost: 0,
-        equipment_cost: 0,
-        software_cost: 0,
-        marketing_initial: 0,
-        initial_stock: 0,
-        monthly_salaries: salarios,
-        monthly_services: servicios,
-        monthly_suppliers: 0,
-      })
-      await api.post("/scenarios", {
+      try {
+        await api.post("/cost-estimations", { analysis_id: analysisId, ...costos })
+      } catch (e) {
+        // Ya existe una estimación para este análisis: la actualizamos
+        if (e.response?.status === 409 && e.response.data?.id) {
+          await api.patch(`/cost-estimations/${e.response.data.id}`, costos)
+        } else {
+          throw e
+        }
+      }
+      const { data: escenario } = await api.post("/scenarios", {
         analysis_id: analysisId,
         name: "Escenario principal",
         monthly_revenue_est: metricas.ingresosMensuales,
@@ -88,9 +109,14 @@ export default function Simulador() {
         monthly_sales_vol: ventasMensuales,
         profit_margin: margen,
       })
-      alert("Escenario guardado correctamente.")
+      setGuardado({
+        ok: true,
+        texto: `Escenario guardado.${escenario?.break_even_months ? ` Según el servidor recuperás la inversión en ${escenario.break_even_months} meses.` : ""}`,
+      })
     } catch (e) {
-      alert("No se pudo guardar. Verificá que hayas hecho un análisis primero.")
+      setGuardado({ ok: false, texto: mensajeError(e, "No se pudo guardar el escenario.") })
+    } finally {
+      setGuardando(false)
     }
   }
 
@@ -140,8 +166,13 @@ export default function Simulador() {
           width: "100%", padding: "14px", borderRadius: 12, fontSize: 15,
           fontWeight: 700, cursor: "pointer", border: "none",
           background: "var(--color-primary)", color: "var(--color-on-primary)",
-          marginTop: 8
-        }}>Guardar escenario</button>
+          marginTop: 8, opacity: guardando ? 0.7 : 1
+        }} disabled={guardando}>{guardando ? "Guardando..." : "Guardar escenario"}</button>
+        {guardado && (
+          <p style={{ fontSize: 12, marginTop: 10, color: guardado.ok ? "#16a34a" : "#dc2626" }}>
+            {guardado.texto}
+          </p>
+        )}
       </div>
 
       {/* Panel derecho */}

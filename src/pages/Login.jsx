@@ -1,12 +1,15 @@
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import api from "../services/api"
+import { useNavigate, Link, useSearchParams } from "react-router-dom"
+import api, { saveSession, mensajeError } from "../services/api"
 
 export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [searchParams] = useSearchParams()
+  const [error, setError] = useState(
+    searchParams.get("expirada") ? "Tu sesión expiró. Volvé a iniciar sesión." : ""
+  )
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
@@ -15,10 +18,17 @@ export default function Login() {
     setError("")
     try {
       const res = await api.post("/users/login", { email, password })
-      localStorage.setItem("user", JSON.stringify(res.data))
-      navigate("/")
+      // El back devuelve { user, token }
+      if (!res.data?.token || !res.data?.user) {
+        setError("Respuesta inesperada del servidor al iniciar sesión.")
+        return
+      }
+      saveSession(res.data)
+      navigate(searchParams.get("next") || "/")
     } catch (e) {
-      setError("Email o contraseña incorrectos.")
+      setError(e.response?.status === 401
+        ? "Email o contraseña incorrectos."
+        : mensajeError(e, "No se pudo iniciar sesión."))
     } finally {
       setLoading(false)
     }
